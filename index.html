@@ -19,59 +19,6 @@
   </head>
   <body>
     <main class="app-shell">
-      <section class="hero-panel">
-        <p class="eyebrow">Prayer, but in a familiar format</p>
-        <h1>Prayer Thread</h1>
-        <p class="hero-copy">
-          A texting-style space to send your prayers, keep track of your prayer
-          rhythm, and slow down long enough to talk to God more often.
-        </p>
-
-        <div class="stats-grid">
-          <article class="stat-card">
-            <span class="stat-label">Current streak</span>
-            <strong class="stat-value" id="streakValue">0 days</strong>
-          </article>
-          <article class="stat-card">
-            <span class="stat-label">Prayers sent</span>
-            <strong class="stat-value" id="totalValue">0</strong>
-          </article>
-          <article class="stat-card">
-            <span class="stat-label">Current mood</span>
-            <strong class="stat-value" id="moodValue">Starting fresh</strong>
-          </article>
-        </div>
-
-        <section class="prompt-panel">
-          <div class="panel-header">
-            <h2>Quick starts</h2>
-            <p>Tap one when you do not know what to pray.</p>
-          </div>
-          <div class="chip-row" id="promptChips"></div>
-        </section>
-
-        <section class="prompt-panel">
-          <div class="panel-header">
-            <h2>Prayer mode</h2>
-            <p>Choose the tone you are bringing into this moment.</p>
-          </div>
-          <div class="chip-row" id="moodChips"></div>
-        </section>
-
-        <section class="install-panel" id="installPanel">
-          <div class="panel-header">
-            <h2>Install</h2>
-            <p>Put it on your phone or launch it from your Mac dock.</p>
-          </div>
-          <p class="install-copy" id="installCopy">
-            Open this site in Safari on iPhone, tap Share, then choose Add to Home Screen.
-          </p>
-          <button class="send-button install-button is-hidden" id="installButton" type="button">
-            Install app
-          </button>
-        </section>
-      </section>
-
       <section class="phone-panel">
         <div class="phone-frame">
           <header class="chat-header">
@@ -79,9 +26,18 @@
               <p class="chat-label">Open conversation</p>
               <h2>God</h2>
             </div>
-            <button class="ghost-button" id="clearButton" type="button">
-              Reset
-            </button>
+            <div class="chat-actions">
+              <label class="theme-toggle" for="themeToggle">
+                <input id="themeToggle" type="checkbox" />
+                <span class="toggle-track">
+                  <span class="toggle-thumb"></span>
+                </span>
+                <span class="toggle-label">Dark</span>
+              </label>
+              <button class="ghost-button" id="clearButton" type="button">
+                Reset
+              </button>
+            </div>
           </header>
 
           <section class="thread" id="thread" aria-live="polite"></section>
@@ -107,6 +63,47 @@
             </div>
           </form>
         </div>
+      </section>
+
+      <section class="hero-panel">
+        <p class="eyebrow">Prayer, but in a familiar format</p>
+        <h1>Prayer Thread</h1>
+        <p class="hero-copy">
+          A texting-style space to send your prayers, keep track of your prayer
+          rhythm, and slow down long enough to talk to God more often.
+        </p>
+
+        <div class="stats-grid stats-grid-compact">
+          <article class="stat-card">
+            <span class="stat-label">Current streak</span>
+            <strong class="stat-value" id="streakValue">0 days</strong>
+          </article>
+          <article class="stat-card">
+            <span class="stat-label">Prayers sent</span>
+            <strong class="stat-value" id="totalValue">0</strong>
+          </article>
+        </div>
+
+        <section class="prompt-panel">
+          <div class="panel-header">
+            <h2>Quick starts</h2>
+            <p>Tap one when you do not know what to pray.</p>
+          </div>
+          <div class="chip-row" id="promptChips"></div>
+        </section>
+
+        <section class="install-panel" id="installPanel">
+          <div class="panel-header">
+            <h2>Install</h2>
+            <p>Put it on your phone or launch it from your Mac dock.</p>
+          </div>
+          <p class="install-copy" id="installCopy">
+            Open this site in Safari on iPhone, tap Share, then choose Add to Home Screen.
+          </p>
+          <button class="send-button install-button is-hidden" id="installButton" type="button">
+            Install app
+          </button>
+        </section>
       </section>
     </main>
 

@@ -1,4 +1,5 @@
 const STORAGE_KEY = "prayer-thread-state";
+const THEME_KEY = "prayer-thread-theme";
 
 const quickPrompts = [
   "God, thank You for staying close even when life feels noisy.",
@@ -8,35 +9,15 @@ const quickPrompts = [
   "Give me courage to be kind when it is hard."
 ];
 
-const reflections = {
-  grateful: [
-    "Gratitude sharpens your attention. Name the good you almost missed.",
-    "Thankfulness can be specific. Try thanking God for one ordinary detail from today."
-  ],
-  heavy: [
-    "Prayer can hold grief, anger, and confusion. Honesty is still reverence.",
-    "If words are hard, keep it simple: 'God, stay near me in this.'"
-  ],
-  hopeful: [
-    "Hope does not require certainty. It starts with trust before answers arrive.",
-    "Ask boldly for what you need, then sit in the quiet for a moment."
-  ],
-  anxious: [
-    "Try turning your worry into one sentence and handing that sentence to God.",
-    "You do not have to untangle everything before you pray."
-  ]
-};
-
-const moodOptions = [
-  { id: "grateful", label: "Grateful" },
-  { id: "heavy", label: "Heavy" },
-  { id: "hopeful", label: "Hopeful" },
-  { id: "anxious", label: "Anxious" }
+const reflections = [
+  "Start with honesty. Prayer does not need polished words.",
+  "If you do not know what to say, begin with one true sentence.",
+  "Thank God for one specific thing from today before asking for anything else.",
+  "If your mind is loud, write the prayer exactly as it feels."
 ];
 
 const initialState = {
   messages: [],
-  selectedMood: "hopeful",
   lastPrayerDate: "",
   streak: 0
 };
@@ -45,23 +26,22 @@ const thread = document.querySelector("#thread");
 const composer = document.querySelector("#composer");
 const prayerInput = document.querySelector("#prayerInput");
 const promptChips = document.querySelector("#promptChips");
-const moodChips = document.querySelector("#moodChips");
 const streakValue = document.querySelector("#streakValue");
 const totalValue = document.querySelector("#totalValue");
-const moodValue = document.querySelector("#moodValue");
 const reflectionText = document.querySelector("#reflectionText");
 const clearButton = document.querySelector("#clearButton");
 const messageTemplate = document.querySelector("#messageTemplate");
 const installButton = document.querySelector("#installButton");
 const installCopy = document.querySelector("#installCopy");
+const themeToggle = document.querySelector("#themeToggle");
 
 let deferredInstallPrompt = null;
 
 let state = loadState();
 refreshStreakStatus();
+applyTheme(loadTheme());
 
 renderPromptChips();
-renderMoodChips();
 renderThread();
 renderStats();
 renderReflection();
@@ -79,8 +59,7 @@ composer.addEventListener("submit", (event) => {
 
   state.messages.push({
     text: prayer,
-    createdAt: new Date().toISOString(),
-    mood: state.selectedMood
+    createdAt: new Date().toISOString()
   });
   updatePrayerStreak();
   persistState();
@@ -96,7 +75,6 @@ clearButton.addEventListener("click", () => {
   persistState();
   renderThread();
   renderStats();
-  renderMoodChips();
   renderReflection();
 });
 
@@ -109,6 +87,12 @@ installButton.addEventListener("click", async () => {
   await deferredInstallPrompt.userChoice;
   deferredInstallPrompt = null;
   installButton.classList.add("is-hidden");
+});
+
+themeToggle.addEventListener("change", () => {
+  const nextTheme = themeToggle.checked ? "dark" : "light";
+  applyTheme(nextTheme);
+  localStorage.setItem(THEME_KEY, nextTheme);
 });
 
 function renderPromptChips() {
@@ -150,25 +134,6 @@ function configureInstallExperience() {
     "On Mac: open this in Chrome or Edge and use Install app when it appears.";
 }
 
-function renderMoodChips() {
-  moodChips.innerHTML = "";
-
-  moodOptions.forEach((option) => {
-    const button = document.createElement("button");
-    button.className = `chip${option.id === state.selectedMood ? " is-active" : ""}`;
-    button.type = "button";
-    button.textContent = option.label;
-    button.addEventListener("click", () => {
-      state.selectedMood = option.id;
-      persistState();
-      renderMoodChips();
-      renderStats();
-      renderReflection();
-    });
-    moodChips.appendChild(button);
-  });
-}
-
 function renderThread() {
   thread.innerHTML = "";
 
@@ -194,13 +159,11 @@ function renderThread() {
 function renderStats() {
   streakValue.textContent = `${state.streak} ${state.streak === 1 ? "day" : "days"}`;
   totalValue.textContent = String(state.messages.length);
-  moodValue.textContent = formatMoodLabel(state.selectedMood);
 }
 
 function renderReflection(justSent = false) {
-  const options = reflections[state.selectedMood];
-  const index = justSent ? state.messages.length % options.length : 0;
-  reflectionText.textContent = options[index];
+  const index = justSent ? state.messages.length % reflections.length : 0;
+  reflectionText.textContent = reflections[index];
 }
 
 function updatePrayerStreak() {
@@ -241,6 +204,23 @@ function persistState() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 }
 
+function loadTheme() {
+  const savedTheme = localStorage.getItem(THEME_KEY);
+  if (savedTheme === "dark" || savedTheme === "light") {
+    return savedTheme;
+  }
+
+  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+}
+
+function applyTheme(theme) {
+  document.documentElement.setAttribute("data-theme", theme);
+  themeToggle.checked = theme === "dark";
+  document
+    .querySelector('meta[name="theme-color"]')
+    .setAttribute("content", theme === "dark" ? "#18202c" : "#c96f4a");
+}
+
 function registerServiceWorker() {
   if (!("serviceWorker" in navigator)) {
     return;
@@ -274,11 +254,6 @@ function formatTimestamp(value) {
     hour: "numeric",
     minute: "2-digit"
   }).format(new Date(value));
-}
-
-function formatMoodLabel(mood) {
-  const match = moodOptions.find((option) => option.id === mood);
-  return match ? match.label : "Starting fresh";
 }
 
 function formatDayStamp(date) {
