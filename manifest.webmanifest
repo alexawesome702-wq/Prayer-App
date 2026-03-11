@@ -1,0 +1,18 @@
+{
+  "name": "Prayer Thread",
+  "short_name": "Prayer Thread",
+  "description": "A texting-style prayer app that helps people pray more often.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f8efe2",
+  "theme_color": "#c96f4a",
+  "icons": [
+    {
+      "src": "./icons/icon-app.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
