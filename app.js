@@ -16,35 +16,31 @@ const reflections = [
   "If your mind is loud, write the prayer exactly as it feels."
 ];
 
-const initialState = {
-  messages: [],
-  lastPrayerDate: "",
-  streak: 0
-};
-
 const thread = document.querySelector("#thread");
 const composer = document.querySelector("#composer");
 const prayerInput = document.querySelector("#prayerInput");
 const promptChips = document.querySelector("#promptChips");
+const dayTabs = document.querySelector("#dayTabs");
 const streakValue = document.querySelector("#streakValue");
 const totalValue = document.querySelector("#totalValue");
 const reflectionText = document.querySelector("#reflectionText");
 const clearButton = document.querySelector("#clearButton");
+const helperText = document.querySelector("#helperText");
 const messageTemplate = document.querySelector("#messageTemplate");
 const installButton = document.querySelector("#installButton");
 const installCopy = document.querySelector("#installCopy");
 const themeToggle = document.querySelector("#themeToggle");
 
 let deferredInstallPrompt = null;
-
 let state = loadState();
-refreshStreakStatus();
-applyTheme(loadTheme());
 
+applyTheme(loadTheme());
 renderPromptChips();
+renderDayTabs();
 renderThread();
 renderStats();
 renderReflection();
+renderHelperText();
 configureInstallExperience();
 registerServiceWorker();
 
@@ -64,25 +60,32 @@ composer.addEventListener("submit", (event) => {
     return;
   }
 
-  state.messages.push({
+  const today = formatDayStamp(new Date());
+  ensureDay(today);
+  state.activeDay = today;
+  state.days[today].push({
     text: prayer,
     createdAt: new Date().toISOString()
   });
-  updatePrayerStreak();
+
   persistState();
+  renderDayTabs();
   renderThread();
   renderStats();
   renderReflection(true);
+  renderHelperText();
   composer.reset();
   prayerInput.focus();
 });
 
 clearButton.addEventListener("click", () => {
-  state = { ...initialState };
+  state = createInitialState();
   persistState();
+  renderDayTabs();
   renderThread();
   renderStats();
   renderReflection();
+  renderHelperText();
 });
 
 installButton.addEventListener("click", async () => {
@@ -102,6 +105,101 @@ themeToggle.addEventListener("change", () => {
   localStorage.setItem(THEME_KEY, nextTheme);
 });
 
+function createInitialState() {
+  const today = formatDayStamp(new Date());
+  return {
+    days: {},
+    activeDay: today
+  };
+}
+
+function loadState() {
+  const fallback = createInitialState();
+
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (!saved) {
+      return fallback;
+    }
+
+    const parsed = JSON.parse(saved);
+    return migrateState(parsed);
+  } catch {
+    return fallback;
+  }
+}
+
+function migrateState(saved) {
+  const nextState = createInitialState();
+
+  if (saved && typeof saved === "object" && saved.days && typeof saved.days === "object") {
+    nextState.days = normalizeDays(saved.days);
+    nextState.activeDay = nextState.days[saved.activeDay] ? saved.activeDay : chooseDefaultDay(nextState.days);
+    return nextState;
+  }
+
+  if (saved && Array.isArray(saved.messages)) {
+    saved.messages.forEach((message) => {
+      if (!message || !message.createdAt || !message.text) {
+        return;
+      }
+
+      const day = formatDayStamp(new Date(message.createdAt));
+      if (!nextState.days[day]) {
+        nextState.days[day] = [];
+      }
+
+      nextState.days[day].push({
+        text: message.text,
+        createdAt: message.createdAt
+      });
+    });
+
+    nextState.activeDay = chooseDefaultDay(nextState.days);
+  }
+
+  return nextState;
+}
+
+function normalizeDays(days) {
+  const normalized = {};
+
+  Object.entries(days).forEach(([day, messages]) => {
+    if (!Array.isArray(messages) || !messages.length) {
+      return;
+    }
+
+    normalized[day] = messages
+      .filter((message) => message && message.text && message.createdAt)
+      .sort((left, right) => new Date(left.createdAt) - new Date(right.createdAt));
+  });
+
+  return normalized;
+}
+
+function persistState() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+function ensureDay(day) {
+  if (!state.days[day]) {
+    state.days[day] = [];
+  }
+}
+
+function chooseDefaultDay(days) {
+  const sorted = getSortedDays(days);
+  return sorted[0] || formatDayStamp(new Date());
+}
+
+function getSortedDays(days = state.days) {
+  return Object.keys(days).sort((left, right) => new Date(right) - new Date(left));
+}
+
+function getActiveMessages() {
+  return state.days[state.activeDay] || [];
+}
+
 function renderPromptChips() {
   promptChips.innerHTML = "";
 
@@ -116,6 +214,115 @@ function renderPromptChips() {
     });
     promptChips.appendChild(button);
   });
+}
+
+function renderDayTabs() {
+  const days = getSortedDays();
+  dayTabs.innerHTML = "";
+
+  if (!days.length) {
+    const button = createDayTab(formatDayStamp(new Date()), true);
+    dayTabs.appendChild(button);
+    return;
+  }
+
+  days.forEach((day) => {
+    dayTabs.appendChild(createDayTab(day, day === state.activeDay));
+  });
+}
+
+function createDayTab(day, isActive) {
+  const button = document.createElement("button");
+  button.className = `day-tab${isActive ? " is-active" : ""}`;
+  button.type = "button";
+  button.innerHTML = `
+    <span class="day-tab-title">${formatDayTitle(day)}</span>
+    <span class="day-tab-subtitle">${formatDaySubtitle(day)}</span>
+  `;
+  button.addEventListener("click", () => {
+    state.activeDay = day;
+    persistState();
+    renderDayTabs();
+    renderThread();
+    renderReflection();
+    renderHelperText();
+  });
+  return button;
+}
+
+function renderThread() {
+  thread.innerHTML = "";
+  const messages = getActiveMessages();
+
+  if (!messages.length) {
+    const empty = document.createElement("div");
+    empty.className = "empty-state";
+    empty.innerHTML = `
+      <p>No prayers saved for ${formatDayTitle(state.activeDay)}.</p>
+      <p>Write something now and it will be added to today's journal tab.</p>
+    `;
+    thread.appendChild(empty);
+    return;
+  }
+
+  messages.forEach((message) => {
+    const node = messageTemplate.content.firstElementChild.cloneNode(true);
+    node.querySelector(".message-text").textContent = message.text;
+    node.querySelector(".message-time").textContent = formatTimestamp(message.createdAt);
+    thread.appendChild(node);
+  });
+
+  thread.scrollTop = thread.scrollHeight;
+}
+
+function renderStats() {
+  const streak = calculateStreak();
+  streakValue.textContent = `${streak} ${streak === 1 ? "day" : "days"}`;
+  totalValue.textContent = String(getTotalPrayerCount());
+}
+
+function renderReflection(justSent = false) {
+  const currentCount = getActiveMessages().length;
+  const index = justSent ? currentCount % reflections.length : 0;
+  reflectionText.textContent = reflections[index];
+}
+
+function renderHelperText() {
+  const today = formatDayStamp(new Date());
+  helperText.textContent =
+    state.activeDay === today
+      ? "Saved only on this device."
+      : `Viewing ${formatLongDay(state.activeDay)}. New prayers save to today.`;
+}
+
+function getTotalPrayerCount() {
+  return Object.values(state.days).reduce((count, messages) => count + messages.length, 0);
+}
+
+function calculateStreak() {
+  const days = getSortedDays().sort((left, right) => new Date(left) - new Date(right));
+  if (!days.length) {
+    return 0;
+  }
+
+  const today = formatDayStamp(new Date());
+  const yesterday = shiftDay(today, -1);
+  const mostRecent = days[days.length - 1];
+
+  if (mostRecent !== today && mostRecent !== yesterday) {
+    return 0;
+  }
+
+  let streak = 1;
+  for (let index = days.length - 1; index > 0; index -= 1) {
+    if (shiftDay(days[index], -1) === days[index - 1]) {
+      streak += 1;
+    } else {
+      break;
+    }
+  }
+
+  return streak;
 }
 
 function configureInstallExperience() {
@@ -139,76 +346,6 @@ function configureInstallExperience() {
 
   installCopy.textContent =
     "On Mac: open this in Chrome or Edge and use Install app when it appears.";
-}
-
-function renderThread() {
-  thread.innerHTML = "";
-
-  if (!state.messages.length) {
-    const empty = document.createElement("div");
-    empty.className = "empty-state";
-    empty.innerHTML =
-      "<p>Your prayer thread is empty.</p><p>Send a short prayer, a thank you, or one honest sentence.</p>";
-    thread.appendChild(empty);
-    return;
-  }
-
-  state.messages.forEach((message) => {
-    const node = messageTemplate.content.firstElementChild.cloneNode(true);
-    node.querySelector(".message-text").textContent = message.text;
-    node.querySelector(".message-time").textContent = formatTimestamp(message.createdAt);
-    thread.appendChild(node);
-  });
-
-  thread.scrollTop = thread.scrollHeight;
-}
-
-function renderStats() {
-  streakValue.textContent = `${state.streak} ${state.streak === 1 ? "day" : "days"}`;
-  totalValue.textContent = String(state.messages.length);
-}
-
-function renderReflection(justSent = false) {
-  const index = justSent ? state.messages.length % reflections.length : 0;
-  reflectionText.textContent = reflections[index];
-}
-
-function updatePrayerStreak() {
-  const today = formatDayStamp(new Date());
-
-  if (!state.lastPrayerDate) {
-    state.streak = 1;
-    state.lastPrayerDate = today;
-    return;
-  }
-
-  if (state.lastPrayerDate === today) {
-    return;
-  }
-
-  const previous = new Date(`${state.lastPrayerDate}T00:00:00`);
-  const current = new Date(`${today}T00:00:00`);
-  const differenceInDays = Math.round((current - previous) / 86400000);
-
-  state.streak = differenceInDays === 1 ? state.streak + 1 : 1;
-  state.lastPrayerDate = today;
-}
-
-function loadState() {
-  try {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (!saved) {
-      return { ...initialState };
-    }
-
-    return { ...initialState, ...JSON.parse(saved) };
-  } catch {
-    return { ...initialState };
-  }
-}
-
-function persistState() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 }
 
 function loadTheme() {
@@ -241,21 +378,6 @@ function registerServiceWorker() {
   });
 }
 
-function refreshStreakStatus() {
-  if (!state.lastPrayerDate) {
-    return;
-  }
-
-  const previous = new Date(`${state.lastPrayerDate}T00:00:00`);
-  const current = new Date(`${formatDayStamp(new Date())}T00:00:00`);
-  const differenceInDays = Math.round((current - previous) / 86400000);
-
-  if (differenceInDays > 1) {
-    state.streak = 0;
-    persistState();
-  }
-}
-
 function formatTimestamp(value) {
   return new Intl.DateTimeFormat(undefined, {
     hour: "numeric",
@@ -263,10 +385,47 @@ function formatTimestamp(value) {
   }).format(new Date(value));
 }
 
+function formatDayTitle(day) {
+  const today = formatDayStamp(new Date());
+  const yesterday = shiftDay(today, -1);
+
+  if (day === today) {
+    return "Today";
+  }
+
+  if (day === yesterday) {
+    return "Yesterday";
+  }
+
+  return new Intl.DateTimeFormat(undefined, {
+    month: "short",
+    day: "numeric"
+  }).format(new Date(`${day}T12:00:00`));
+}
+
+function formatDaySubtitle(day) {
+  const messages = state.days[day] || [];
+  return `${messages.length} ${messages.length === 1 ? "prayer" : "prayers"}`;
+}
+
+function formatLongDay(day) {
+  return new Intl.DateTimeFormat(undefined, {
+    month: "long",
+    day: "numeric",
+    year: "numeric"
+  }).format(new Date(`${day}T12:00:00`));
+}
+
 function formatDayStamp(date) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(
     date.getDate()
   ).padStart(2, "0")}`;
+}
+
+function shiftDay(day, amount) {
+  const date = new Date(`${day}T12:00:00`);
+  date.setDate(date.getDate() + amount);
+  return formatDayStamp(date);
 }
 
 window.addEventListener("beforeinstallprompt", (event) => {

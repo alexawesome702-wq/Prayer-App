@@ -295,6 +295,62 @@ h1 {
   padding: 12px 6px 16px;
 }
 
+.day-tabs {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding: 0 6px 10px;
+  margin-bottom: 4px;
+  scrollbar-width: none;
+}
+
+.day-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.day-tab {
+  flex: 0 0 auto;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: var(--panel-strong);
+  color: var(--text);
+  padding: 10px 14px;
+  min-width: 102px;
+  text-align: left;
+  transition: background 160ms ease, transform 160ms ease, border-color 160ms ease;
+}
+
+.day-tab:hover,
+.day-tab:focus-visible {
+  transform: translateY(-1px);
+}
+
+.day-tab.is-active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fffaf7;
+}
+
+.day-tab-title,
+.day-tab-subtitle {
+  display: block;
+}
+
+.day-tab-title {
+  font-family: var(--font-display);
+  font-size: 0.9rem;
+}
+
+.day-tab-subtitle {
+  margin-top: 3px;
+  font-size: 0.76rem;
+  color: var(--muted);
+}
+
+.day-tab.is-active .day-tab-subtitle {
+  color: rgba(255, 250, 247, 0.82);
+}
+
 .message {
   max-width: 85%;
   padding: 14px 16px 10px;
