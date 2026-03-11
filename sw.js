@@ -1,4 +1,4 @@
-const CACHE_NAME = "prayer-thread-v1";
+const CACHE_NAME = "prayer-thread-v2";
 const ASSETS = [
   "./",
   "./index.html",
@@ -28,17 +28,27 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      if (cachedResponse) {
-        return cachedResponse;
-      }
+  const requestUrl = new URL(event.request.url);
+  const isSameOrigin = requestUrl.origin === self.location.origin;
 
-      return fetch(event.request).then((networkResponse) => {
-        const responseClone = networkResponse.clone();
-        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseClone));
+  event.respondWith(
+    fetch(event.request)
+      .then((networkResponse) => {
+        if (isSameOrigin) {
+          const responseClone = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseClone));
+        }
+
         return networkResponse;
-      });
-    })
+      })
+      .catch(() =>
+        caches.match(event.request).then((cachedResponse) => {
+          if (cachedResponse) {
+            return cachedResponse;
+          }
+
+          return caches.match("./index.html");
+        })
+      )
   );
 });
