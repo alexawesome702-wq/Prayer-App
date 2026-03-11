@@ -48,6 +48,13 @@ renderReflection();
 configureInstallExperience();
 registerServiceWorker();
 
+prayerInput.addEventListener("keydown", (event) => {
+  if (event.key === "Enter" && !event.shiftKey) {
+    event.preventDefault();
+    composer.requestSubmit();
+  }
+});
+
 composer.addEventListener("submit", (event) => {
   event.preventDefault();
   const prayer = prayerInput.value.trim();
