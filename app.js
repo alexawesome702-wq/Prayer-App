@@ -16,6 +16,14 @@ const reflections = [
   "If your mind is loud, write the prayer exactly as it feels."
 ];
 
+const nudges = [
+  "God, help me tell the truth about what I am carrying today.",
+  "Thank You for staying with me in the middle of ordinary life.",
+  "Give me peace about the thing I keep replaying in my head.",
+  "Show me one person I can love well today.",
+  "I do not have perfect words, but I am here."
+];
+
 const thread = document.querySelector("#thread");
 const composer = document.querySelector("#composer");
 const prayerInput = document.querySelector("#prayerInput");
@@ -24,8 +32,10 @@ const dayTabs = document.querySelector("#dayTabs");
 const streakValue = document.querySelector("#streakValue");
 const totalValue = document.querySelector("#totalValue");
 const reflectionText = document.querySelector("#reflectionText");
+const nudgeText = document.querySelector("#nudgeText");
 const clearButton = document.querySelector("#clearButton");
 const helperText = document.querySelector("#helperText");
+const useNudgeButton = document.querySelector("#useNudgeButton");
 const messageTemplate = document.querySelector("#messageTemplate");
 const installButton = document.querySelector("#installButton");
 const installCopy = document.querySelector("#installCopy");
@@ -40,6 +50,7 @@ renderDayTabs();
 renderThread();
 renderStats();
 renderReflection();
+renderDailyNudge();
 renderHelperText();
 configureInstallExperience();
 registerServiceWorker();
@@ -73,6 +84,7 @@ composer.addEventListener("submit", (event) => {
   renderThread();
   renderStats();
   renderReflection(true);
+  renderDailyNudge();
   renderHelperText();
   composer.reset();
   prayerInput.focus();
@@ -85,6 +97,7 @@ clearButton.addEventListener("click", () => {
   renderThread();
   renderStats();
   renderReflection();
+  renderDailyNudge();
   renderHelperText();
 });
 
@@ -103,6 +116,11 @@ themeToggle.addEventListener("change", () => {
   const nextTheme = themeToggle.checked ? "dark" : "light";
   applyTheme(nextTheme);
   localStorage.setItem(THEME_KEY, nextTheme);
+});
+
+useNudgeButton.addEventListener("click", () => {
+  prayerInput.value = getDailyNudge();
+  prayerInput.focus();
 });
 
 function createInitialState() {
@@ -287,6 +305,10 @@ function renderReflection(justSent = false) {
   reflectionText.textContent = reflections[index];
 }
 
+function renderDailyNudge() {
+  nudgeText.textContent = getDailyNudge();
+}
+
 function renderHelperText() {
   const today = formatDayStamp(new Date());
   helperText.textContent =
@@ -297,6 +319,18 @@ function renderHelperText() {
 
 function getTotalPrayerCount() {
   return Object.values(state.days).reduce((count, messages) => count + messages.length, 0);
+}
+
+function getDailyNudge() {
+  const today = formatDayStamp(new Date());
+  const todaysCount = (state.days[today] || []).length;
+
+  if (todaysCount > 0) {
+    return "You already checked in today. Add one more honest sentence before you leave.";
+  }
+
+  const dayNumber = Number(today.replaceAll("-", ""));
+  return nudges[dayNumber % nudges.length];
 }
 
 function calculateStreak() {
