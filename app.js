@@ -336,7 +336,12 @@ function renderThread() {
     empty.className = "empty-state";
     const isToday = state.activeDay === formatDayStamp(new Date());
     empty.innerHTML = isToday
-      ? "<div><p>Start the conversation.</p></div>"
+      ? `<div>
+          <svg class="empty-spark" viewBox="0 0 32 32" aria-hidden="true">
+            <path d="M16 3.5c1.8 6.4 4.1 8.7 12.5 12.5C20.1 19.8 17.8 22.1 16 28.5 14.2 22.1 11.9 19.8 3.5 16 11.9 12.2 14.2 9.9 16 3.5Z" />
+          </svg>
+          <p>Start the conversation.</p>
+        </div>`
       : `<div><p>No entry for ${formatDayTitle(state.activeDay)}.</p></div>`;
     thread.appendChild(empty);
     return;
@@ -555,7 +560,7 @@ function applyTheme(theme) {
   themeToggle.checked = theme === "dark";
   document
     .querySelector('meta[name="theme-color"]')
-    .setAttribute("content", theme === "dark" ? "#11161b" : "#b9613d");
+    .setAttribute("content", theme === "dark" ? "#24170e" : "#f6e2c9");
 }
 
 function setActiveNav(pageId) {
