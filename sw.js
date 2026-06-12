@@ -1,4 +1,4 @@
-const CACHE_NAME = "prayer-thread-v5";
+const CACHE_NAME = "prayer-thread-v6";
 const ASSETS = [
   "./",
   "./index.html",

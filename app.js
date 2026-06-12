@@ -36,6 +36,7 @@ const messageTemplate = document.querySelector("#messageTemplate");
 const installButton = document.querySelector("#installButton");
 const installCopy = document.querySelector("#installCopy");
 const themeToggle = document.querySelector("#themeToggle");
+const bottomNav = document.querySelector("#bottomNav");
 const navButtons = document.querySelectorAll(".nav-button");
 const pages = document.querySelectorAll(".app-page");
 const calendarMonthLabel = document.querySelector("#calendarMonthLabel");
@@ -137,11 +138,9 @@ nextMonthButton.addEventListener("click", () => {
   renderCalendar();
 });
 
-navButtons.forEach((button) => {
-  button.addEventListener("click", () => {
-    switchPage(button.dataset.target);
-  });
-});
+bottomNav.addEventListener("click", handleNavTap);
+bottomNav.addEventListener("pointerup", handleNavTap);
+bottomNav.addEventListener("touchend", handleNavTap);
 
 function renderAll(justSent = false) {
   renderPromptChips();
@@ -534,6 +533,16 @@ function setActiveNav(pageId) {
   navButtons.forEach((button) => {
     button.classList.toggle("is-active", button.dataset.target === pageId);
   });
+}
+
+function handleNavTap(event) {
+  const button = event.target.closest(".nav-button");
+  if (!button) {
+    return;
+  }
+
+  event.preventDefault();
+  switchPage(button.dataset.target);
 }
 
 function switchPage(pageId) {
