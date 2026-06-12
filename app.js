@@ -16,14 +16,6 @@ const reflections = [
   "If your mind is loud, write the prayer exactly as it feels."
 ];
 
-const nudges = [
-  "God, help me tell the truth about what I am carrying today.",
-  "Give me peace about the thing I keep replaying in my head.",
-  "Show me the next right thing, and give me the discipline to do it.",
-  "Help me lead with patience instead of pride today.",
-  "I do not have perfect words, but I am here."
-];
-
 const thread = document.querySelector("#thread");
 const composer = document.querySelector("#composer");
 const prayerInput = document.querySelector("#prayerInput");
@@ -32,15 +24,14 @@ const dayTabs = document.querySelector("#dayTabs");
 const streakValue = document.querySelector("#streakValue");
 const totalValue = document.querySelector("#totalValue");
 const reflectionText = document.querySelector("#reflectionText");
-const nudgeText = document.querySelector("#nudgeText");
 const todayDateLabel = document.querySelector("#todayDateLabel");
-const todayStatusPill = document.querySelector("#todayStatusPill");
 const journalTitle = document.querySelector("#journalTitle");
+const archiveDateLabel = document.querySelector("#archiveDateLabel");
 const composerDateLabel = document.querySelector("#composerDateLabel");
 const clearButton = document.querySelector("#clearButton");
 const helperText = document.querySelector("#helperText");
-const useNudgeButton = document.querySelector("#useNudgeButton");
-const startJournalButton = document.querySelector("#startJournalButton");
+const archiveEntries = document.querySelector("#archiveEntries");
+const openArchiveDayButton = document.querySelector("#openArchiveDayButton");
 const messageTemplate = document.querySelector("#messageTemplate");
 const installButton = document.querySelector("#installButton");
 const installCopy = document.querySelector("#installCopy");
@@ -124,22 +115,16 @@ themeToggle.addEventListener("change", () => {
   setTheme(themeToggle.checked ? "dark" : "light");
 });
 
-useNudgeButton.addEventListener("click", () => {
-  prayerInput.value = getDailyNudge();
-  switchPage("journalPage");
-  prayerInput.focus();
-});
-
-startJournalButton.addEventListener("click", () => {
-  switchPage("journalPage");
-  prayerInput.focus();
-});
-
 openSelectedDayButton.addEventListener("click", () => {
   state.activeDay = selectedDate;
   persistState();
   renderJournal();
-  switchPage("journalPage");
+  switchPage("todayPage");
+});
+
+openArchiveDayButton.addEventListener("click", () => {
+  switchPage("todayPage");
+  prayerInput.focus();
 });
 
 prevMonthButton.addEventListener("click", () => {
@@ -163,9 +148,7 @@ function renderAll(justSent = false) {
   renderDayTabs();
   renderJournal(justSent);
   renderStats();
-  renderDailyNudge();
   renderTodayLabel();
-  renderTodayStatus();
   renderCalendar();
 }
 
@@ -274,7 +257,7 @@ function renderPromptChips() {
     button.textContent = prompt;
     button.addEventListener("click", () => {
       prayerInput.value = prompt;
-      switchPage("journalPage");
+      switchPage("todayPage");
       prayerInput.focus();
     });
     promptChips.appendChild(button);
@@ -305,16 +288,19 @@ function createDayTab(day, isActive) {
     renderDayTabs();
     renderJournal();
     renderCalendar();
+    renderArchiveEntries();
   });
   return button;
 }
 
 function renderJournal(justSent = false) {
   journalTitle.textContent = formatDayTitle(state.activeDay);
+  archiveDateLabel.textContent = formatLongDay(state.activeDay);
   composerDateLabel.textContent = state.activeDay === formatDayStamp(new Date()) ? "Today" : formatLongDay(state.activeDay);
   renderThread();
   renderReflection(justSent);
   renderHelperText();
+  renderArchiveEntries();
 }
 
 function renderThread() {
@@ -324,12 +310,10 @@ function renderThread() {
   if (!messages.length) {
     const empty = document.createElement("div");
     empty.className = "empty-state";
-    empty.innerHTML = `
-      <div>
-        <p>No prayers saved for ${formatDayTitle(state.activeDay)}.</p>
-        <p>The page starts blank each day so you can write what is actually on your mind.</p>
-      </div>
-    `;
+    const isToday = state.activeDay === formatDayStamp(new Date());
+    empty.innerHTML = isToday
+      ? "<div><p>Start the conversation.</p></div>"
+      : `<div><p>No entry for ${formatDayTitle(state.activeDay)}.</p></div>`;
     thread.appendChild(empty);
     return;
   }
@@ -356,22 +340,12 @@ function renderReflection(justSent = false) {
   reflectionText.textContent = reflections[index];
 }
 
-function renderDailyNudge() {
-  nudgeText.textContent = getDailyNudge();
-}
-
 function renderTodayLabel() {
   todayDateLabel.textContent = new Intl.DateTimeFormat(undefined, {
     weekday: "long",
     month: "long",
     day: "numeric"
   }).format(new Date());
-}
-
-function renderTodayStatus() {
-  const currentDay = formatDayStamp(new Date());
-  const todaysCount = (state.days[currentDay] || []).length;
-  todayStatusPill.textContent = todaysCount ? `${todaysCount} today` : "Blank page";
 }
 
 function renderHelperText() {
@@ -434,6 +408,30 @@ function renderCalendar() {
   renderSelectedDayEntries();
 }
 
+function renderArchiveEntries() {
+  archiveEntries.innerHTML = "";
+  const messages = getActiveMessages();
+
+  if (!messages.length) {
+    const empty = document.createElement("div");
+    empty.className = "entry-preview";
+    empty.innerHTML = `<p>No entry for ${formatDayTitle(state.activeDay)} yet.</p>`;
+    archiveEntries.appendChild(empty);
+    return;
+  }
+
+  messages.forEach((message) => {
+    const preview = document.createElement("article");
+    preview.className = "entry-preview";
+    const text = document.createElement("p");
+    const time = document.createElement("time");
+    text.textContent = truncateText(message.text, 120);
+    time.textContent = formatTimestamp(message.createdAt);
+    preview.append(text, time);
+    archiveEntries.appendChild(preview);
+  });
+}
+
 function renderSelectedDayEntries() {
   selectedDateLabel.textContent = formatDayTitle(selectedDate);
   selectedDayEntries.innerHTML = "";
@@ -461,18 +459,6 @@ function renderSelectedDayEntries() {
 
 function getTotalPrayerCount() {
   return Object.values(state.days).reduce((count, messages) => count + messages.length, 0);
-}
-
-function getDailyNudge() {
-  const currentDay = formatDayStamp(new Date());
-  const todaysCount = (state.days[currentDay] || []).length;
-
-  if (todaysCount > 0) {
-    return "You already checked in today. Add one more honest sentence before you leave.";
-  }
-
-  const dayNumber = Number(currentDay.replaceAll("-", ""));
-  return nudges[dayNumber % nudges.length];
 }
 
 function calculateStreak() {

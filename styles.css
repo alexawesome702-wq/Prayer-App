@@ -199,10 +199,6 @@ p {
   line-height: 1.5;
 }
 
-.today-page {
-  display: none;
-}
-
 .status-pill {
   flex: 0 0 auto;
   border-radius: 999px;
@@ -219,6 +215,7 @@ p {
 }
 
 .hero-card,
+.chat-glass,
 .today-footer,
 .day-tabs,
 .journal-card,
@@ -232,6 +229,46 @@ p {
   box-shadow: var(--shadow);
   backdrop-filter: blur(22px) saturate(1.08);
   -webkit-backdrop-filter: blur(22px) saturate(1.08);
+}
+
+.today-page.is-active {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.chat-top {
+  flex: 0 0 auto;
+}
+
+.chat-glass {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  border-radius: 32px;
+  padding: 14px;
+  overflow: hidden;
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.82), rgba(255, 250, 244, 0.48)),
+    var(--surface);
+}
+
+.chat-glass::before {
+  content: "";
+  position: absolute;
+  inset: 1px 1px auto;
+  height: 35%;
+  border-radius: 30px 30px 48px 48px;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.5), transparent);
+}
+
+[data-theme="dark"] .chat-glass {
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.08), rgba(24, 29, 32, 0.46)),
+    var(--surface);
 }
 
 .hero-card {
@@ -405,10 +442,20 @@ p {
 }
 
 .thread {
+  position: relative;
   min-height: 280px;
   max-height: 38dvh;
   overflow-y: auto;
   padding: 4px;
+  overscroll-behavior: contain;
+  mask-image: linear-gradient(to bottom, transparent, #000 16px, #000 calc(100% - 20px), transparent);
+}
+
+.today-page .thread {
+  flex: 1;
+  min-height: 0;
+  max-height: none;
+  padding: 10px 4px 16px;
 }
 
 .message {
@@ -420,6 +467,7 @@ p {
   color: var(--bubble-text);
   background: var(--bubble);
   box-shadow: 0 10px 22px rgba(47, 53, 56, 0.16);
+  animation: message-in 260ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .message-text {
@@ -458,6 +506,25 @@ p {
   padding: 12px;
   background: var(--surface-strong);
   border: 1px solid var(--border);
+}
+
+.today-page .composer {
+  position: relative;
+  flex: 0 0 auto;
+  margin-top: 8px;
+  border-radius: 24px;
+  background: rgba(255, 250, 244, 0.78);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+[data-theme="dark"] .today-page .composer {
+  background: rgba(24, 29, 32, 0.82);
+}
+
+.composer:focus-within {
+  border-color: rgba(173, 92, 56, 0.42);
+  box-shadow: 0 0 0 4px rgba(173, 92, 56, 0.12);
 }
 
 textarea {
@@ -748,6 +815,18 @@ textarea {
   backdrop-filter: blur(28px) saturate(1.22);
   -webkit-backdrop-filter: blur(28px) saturate(1.22);
   transform: translateX(-50%);
+  overflow: hidden;
+}
+
+.bottom-nav::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.72), transparent 42%),
+    linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.36), transparent);
+  opacity: 0.68;
 }
 
 [data-theme="dark"] .bottom-nav {
@@ -758,6 +837,8 @@ textarea {
 }
 
 .nav-button {
+  position: relative;
+  z-index: 1;
   display: grid;
   min-height: 54px;
   place-items: center;
@@ -767,11 +848,13 @@ textarea {
   background: transparent;
   font-family: var(--font-display);
   font-size: 0.72rem;
+  transition: color 180ms ease, background 180ms ease, transform 180ms ease;
 }
 
 .nav-button.is-active {
   color: var(--text);
   background: rgba(47, 53, 56, 0.1);
+  transform: translateY(-1px);
 }
 
 [data-theme="dark"] .nav-button.is-active {
@@ -780,19 +863,29 @@ textarea {
 
 .nav-icon {
   display: grid;
-  width: 22px;
-  height: 22px;
+  width: 24px;
+  height: 24px;
   place-items: center;
   border-radius: 999px;
-  color: transparent;
-  background: transparent;
+  color: var(--muted);
+  background: rgba(47, 53, 56, 0.08);
+  transition: color 180ms ease, background 180ms ease, transform 180ms ease;
+}
+
+.nav-icon svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .nav-button.is-active .nav-icon {
   color: #fffaf4;
   background: var(--accent);
-  font-size: 0.68rem;
-  font-weight: 900;
+  transform: scale(1.04);
 }
 
 .is-hidden {
@@ -832,6 +925,18 @@ textarea {
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes message-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
   }
 }
 

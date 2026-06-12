@@ -20,34 +20,29 @@
   <body>
     <main class="app-shell" id="appShell">
       <section class="app-page today-page is-active" id="todayPage" data-page="today">
-        <header class="top-bar">
+        <header class="top-bar chat-top">
           <div>
-            <p class="eyebrow" id="todayDateLabel">Prayer Thread</p>
-            <h1>Today</h1>
+            <p class="eyebrow" id="todayDateLabel">Prayer journal</p>
+            <h1>God</h1>
           </div>
-          <span class="status-pill" id="todayStatusPill">Blank page</span>
         </header>
 
-        <section class="hero-card reveal-card">
-          <p class="card-label">Today's inspiration</p>
-          <p class="inspiration-text" id="nudgeText">
-            God, help me tell the truth about what I am carrying today.
-          </p>
-          <div class="action-row">
-            <button class="primary-button" id="startJournalButton" type="button">Write</button>
-            <button class="glass-button" id="useNudgeButton" type="button">Use this</button>
-          </div>
-        </section>
+        <section class="chat-glass reveal-card">
+          <section class="thread" id="thread" aria-live="polite"></section>
 
-        <section class="today-footer reveal-card">
-          <article>
-            <span class="stat-label">Streak</span>
-            <strong id="streakValue">0 days</strong>
-          </article>
-          <article>
-            <span class="stat-label">Entries</span>
-            <strong id="totalValue">0</strong>
-          </article>
+          <form class="composer" id="composer">
+            <label class="sr-only" for="prayerInput">Type your prayer</label>
+            <textarea
+              id="prayerInput"
+              rows="4"
+              maxlength="800"
+              placeholder="Text your prayer..."
+            ></textarea>
+            <div class="composer-footer">
+              <span id="composerDateLabel">Today</span>
+              <button class="primary-button send-pill" type="submit">Send</button>
+            </div>
+          </form>
         </section>
       </section>
 
@@ -62,27 +57,22 @@
 
         <section class="day-tabs reveal-card" id="dayTabs" aria-label="Prayer days"></section>
 
-        <section class="journal-card reveal-card">
-          <section class="thread" id="thread" aria-live="polite"></section>
-
-          <form class="composer" id="composer">
-            <label class="sr-only" for="prayerInput">Type your prayer</label>
-            <textarea
-              id="prayerInput"
-              rows="5"
-              maxlength="800"
-              placeholder="Write what you need to say today..."
-            ></textarea>
-            <div class="composer-footer">
-              <span id="composerDateLabel">Today</span>
-              <button class="primary-button" type="submit">Send</button>
-            </div>
-          </form>
-        </section>
-
         <section class="reflection-card reveal-card" id="reflectionCard">
           <p class="card-label">Reflection</p>
           <p id="reflectionText">Start with honesty. Prayer does not need polished words.</p>
+        </section>
+
+        <section class="archive-panel reveal-card">
+          <div class="section-heading inline-heading">
+            <div>
+              <p class="card-label">Selected day</p>
+              <h3 id="archiveDateLabel">Today</h3>
+            </div>
+            <button class="glass-button compact-button" id="openArchiveDayButton" type="button">
+              Open chat
+            </button>
+          </div>
+          <div class="selected-day-entries" id="archiveEntries"></div>
         </section>
 
         <section class="quick-starts reveal-card">
@@ -185,20 +175,39 @@
     </main>
 
     <nav class="bottom-nav" aria-label="App sections">
-      <button class="nav-button is-active" type="button" data-target="todayPage">
-        <span class="nav-icon">T</span>
+      <button class="nav-button is-active" type="button" data-target="todayPage" aria-label="Today">
+        <span class="nav-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24">
+            <path d="M5 8.5C5 6.6 6.6 5 8.5 5h7C17.4 5 19 6.6 19 8.5v5c0 1.9-1.6 3.5-3.5 3.5H12l-4.2 2.5V17A3.5 3.5 0 0 1 5 13.5v-5Z" />
+          </svg>
+        </span>
         <span>Today</span>
       </button>
-      <button class="nav-button" type="button" data-target="journalPage">
-        <span class="nav-icon">J</span>
+      <button class="nav-button" type="button" data-target="journalPage" aria-label="Journal">
+        <span class="nav-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24">
+            <path d="M7 4.5h8.5A2.5 2.5 0 0 1 18 7v12.5H8.5A2.5 2.5 0 0 1 6 17V5.5c0-.6.4-1 1-1Z" />
+            <path d="M9 8h6M9 11h6M9 14h4" />
+          </svg>
+        </span>
         <span>Journal</span>
       </button>
-      <button class="nav-button" type="button" data-target="calendarPage">
-        <span class="nav-icon">C</span>
+      <button class="nav-button" type="button" data-target="calendarPage" aria-label="Calendar">
+        <span class="nav-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24">
+            <path d="M7 4v3M17 4v3M5 8h14M6.5 6h11A1.5 1.5 0 0 1 19 7.5v10A1.5 1.5 0 0 1 17.5 19h-11A1.5 1.5 0 0 1 5 17.5v-10A1.5 1.5 0 0 1 6.5 6Z" />
+            <path d="M8 11h2M12 11h2M16 11h1M8 14h2M12 14h2M16 14h1" />
+          </svg>
+        </span>
         <span>Calendar</span>
       </button>
-      <button class="nav-button" type="button" data-target="settingsPage">
-        <span class="nav-icon">S</span>
+      <button class="nav-button" type="button" data-target="settingsPage" aria-label="Settings">
+        <span class="nav-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24">
+            <path d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Z" />
+            <path d="M19 12a7.4 7.4 0 0 0-.1-1.1l2-1.5-2-3.4-2.4 1a7.5 7.5 0 0 0-1.9-1.1L14.3 3h-4.6l-.3 2.9A7.5 7.5 0 0 0 7.5 7l-2.4-1-2 3.4 2 1.5A7.4 7.4 0 0 0 5 12c0 .4 0 .8.1 1.1l-2 1.5 2 3.4 2.4-1c.6.5 1.2.9 1.9 1.1l.3 2.9h4.6l.3-2.9c.7-.3 1.3-.6 1.9-1.1l2.4 1 2-3.4-2-1.5c.1-.3.1-.7.1-1.1Z" />
+          </svg>
+        </span>
         <span>Settings</span>
       </button>
     </nav>
