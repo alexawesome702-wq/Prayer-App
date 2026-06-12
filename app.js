@@ -22,6 +22,7 @@ const prayerInput = document.querySelector("#prayerInput");
 const promptChips = document.querySelector("#promptChips");
 const dayTabs = document.querySelector("#dayTabs");
 const streakValue = document.querySelector("#streakValue");
+const streakCopy = document.querySelector(".streak-copy");
 const totalValue = document.querySelector("#totalValue");
 const reflectionText = document.querySelector("#reflectionText");
 const todayDateLabel = document.querySelector("#todayDateLabel");
@@ -358,13 +359,22 @@ function renderThread() {
 }
 
 function renderStats() {
-  if (!streakValue || !totalValue) {
+  if (!streakValue && !totalValue) {
     return;
   }
 
   const streak = calculateStreak();
-  streakValue.textContent = `${streak} ${streak === 1 ? "day" : "days"}`;
-  totalValue.textContent = String(getTotalPrayerCount());
+  if (streakValue) {
+    streakValue.textContent = String(streak);
+  }
+
+  if (streakCopy) {
+    streakCopy.textContent = `${streak === 1 ? "day" : "days"} streak`;
+  }
+
+  if (totalValue) {
+    totalValue.textContent = String(getTotalPrayerCount());
+  }
 }
 
 function renderReflection(justSent = false) {
