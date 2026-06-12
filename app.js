@@ -51,6 +51,8 @@ let deferredInstallPrompt = null;
 let state = loadState();
 const today = formatDayStamp(new Date());
 state.activeDay = today;
+let isNavDragging = false;
+let activeNavTarget = "todayPage";
 
 let selectedDate = today;
 let calendarCursor = new Date(`${today}T12:00:00`);
@@ -138,9 +140,17 @@ nextMonthButton.addEventListener("click", () => {
   renderCalendar();
 });
 
-bottomNav.addEventListener("click", handleNavTap);
-bottomNav.addEventListener("pointerup", handleNavTap);
-bottomNav.addEventListener("touchend", handleNavTap);
+navButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    switchPage(button.dataset.target);
+  });
+});
+
+bottomNav.addEventListener("pointerdown", handleNavPointerDown);
+bottomNav.addEventListener("pointermove", handleNavPointerMove);
+bottomNav.addEventListener("pointerup", handleNavPointerUp);
+bottomNav.addEventListener("pointercancel", handleNavPointerUp);
+bottomNav.addEventListener("touchmove", handleNavTouchMove, { passive: false });
 
 function renderAll(justSent = false) {
   renderPromptChips();
@@ -533,19 +543,60 @@ function setActiveNav(pageId) {
   navButtons.forEach((button) => {
     button.classList.toggle("is-active", button.dataset.target === pageId);
   });
+  const index = Array.from(navButtons).findIndex((button) => button.dataset.target === pageId);
+  bottomNav.style.setProperty("--active-index", String(Math.max(index, 0)));
 }
 
-function handleNavTap(event) {
-  const button = event.target.closest(".nav-button");
-  if (!button) {
+function handleNavPointerDown(event) {
+  isNavDragging = true;
+  bottomNav.setPointerCapture?.(event.pointerId);
+  switchToNavButtonAtPoint(event.clientX, event.clientY);
+}
+
+function handleNavPointerMove(event) {
+  if (!isNavDragging) {
     return;
   }
 
   event.preventDefault();
+  switchToNavButtonAtPoint(event.clientX, event.clientY);
+}
+
+function handleNavPointerUp(event) {
+  if (!isNavDragging) {
+    return;
+  }
+
+  isNavDragging = false;
+  bottomNav.releasePointerCapture?.(event.pointerId);
+}
+
+function handleNavTouchMove(event) {
+  const touch = event.touches[0];
+  if (!touch) {
+    return;
+  }
+
+  event.preventDefault();
+  switchToNavButtonAtPoint(touch.clientX, touch.clientY);
+}
+
+function switchToNavButtonAtPoint(x, y) {
+  const element = document.elementFromPoint(x, y);
+  const button = element?.closest(".nav-button");
+  if (!button) {
+    return;
+  }
+
   switchPage(button.dataset.target);
 }
 
 function switchPage(pageId) {
+  if (activeNavTarget === pageId) {
+    return;
+  }
+
+  activeNavTarget = pageId;
   pages.forEach((page) => {
     page.classList.toggle("is-active", page.id === pageId);
   });
