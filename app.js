@@ -6,7 +6,7 @@ const quickPrompts = [
   "I need peace about what comes next.",
   "Help me forgive the person I keep replaying in my mind.",
   "Thank You for one good thing from today.",
-  "Give me courage to be kind when it is hard."
+  "Give me courage to be steady and kind today."
 ];
 
 const reflections = [
@@ -18,12 +18,13 @@ const reflections = [
 
 const nudges = [
   "God, help me tell the truth about what I am carrying today.",
-  "Thank You for staying with me in the middle of ordinary life.",
   "Give me peace about the thing I keep replaying in my head.",
-  "Show me one person I can love well today.",
+  "Show me the next right thing, and give me the discipline to do it.",
+  "Help me lead with patience instead of pride today.",
   "I do not have perfect words, but I am here."
 ];
 
+const appShell = document.querySelector("#appShell");
 const thread = document.querySelector("#thread");
 const composer = document.querySelector("#composer");
 const prayerInput = document.querySelector("#prayerInput");
@@ -33,27 +34,42 @@ const streakValue = document.querySelector("#streakValue");
 const totalValue = document.querySelector("#totalValue");
 const reflectionText = document.querySelector("#reflectionText");
 const nudgeText = document.querySelector("#nudgeText");
+const todayDateLabel = document.querySelector("#todayDateLabel");
+const journalTitle = document.querySelector("#journalTitle");
+const composerDateLabel = document.querySelector("#composerDateLabel");
 const clearButton = document.querySelector("#clearButton");
 const helperText = document.querySelector("#helperText");
 const useNudgeButton = document.querySelector("#useNudgeButton");
+const startJournalButton = document.querySelector("#startJournalButton");
 const messageTemplate = document.querySelector("#messageTemplate");
 const installButton = document.querySelector("#installButton");
 const installCopy = document.querySelector("#installCopy");
 const themeToggle = document.querySelector("#themeToggle");
+const themeToggleSettings = document.querySelector("#themeToggleSettings");
+const navButtons = document.querySelectorAll(".nav-button");
+const sections = document.querySelectorAll(".snap-section");
+const calendarMonthLabel = document.querySelector("#calendarMonthLabel");
+const calendarGrid = document.querySelector("#calendarGrid");
+const prevMonthButton = document.querySelector("#prevMonthButton");
+const nextMonthButton = document.querySelector("#nextMonthButton");
+const selectedDateLabel = document.querySelector("#selectedDateLabel");
+const selectedDayEntries = document.querySelector("#selectedDayEntries");
+const openSelectedDayButton = document.querySelector("#openSelectedDayButton");
 
 let deferredInstallPrompt = null;
 let state = loadState();
+const today = formatDayStamp(new Date());
+state.activeDay = today;
+
+let selectedDate = today;
+let calendarCursor = new Date(`${today}T12:00:00`);
+calendarCursor.setDate(1);
 
 applyTheme(loadTheme());
-renderPromptChips();
-renderDayTabs();
-renderThread();
-renderStats();
-renderReflection();
-renderDailyNudge();
-renderHelperText();
+renderAll();
 configureInstallExperience();
 registerServiceWorker();
+setupSectionObserver();
 
 prayerInput.addEventListener("keydown", (event) => {
   if (event.key === "Enter" && !event.shiftKey) {
@@ -71,34 +87,28 @@ composer.addEventListener("submit", (event) => {
     return;
   }
 
-  const today = formatDayStamp(new Date());
-  ensureDay(today);
-  state.activeDay = today;
-  state.days[today].push({
+  const currentDay = formatDayStamp(new Date());
+  ensureDay(currentDay);
+  state.activeDay = currentDay;
+  selectedDate = currentDay;
+  calendarCursor = getMonthCursor(currentDay);
+  state.days[currentDay].push({
     text: prayer,
     createdAt: new Date().toISOString()
   });
 
   persistState();
-  renderDayTabs();
-  renderThread();
-  renderStats();
-  renderReflection(true);
-  renderDailyNudge();
-  renderHelperText();
+  renderAll(true);
   composer.reset();
   prayerInput.focus();
 });
 
 clearButton.addEventListener("click", () => {
   state = createInitialState();
+  selectedDate = formatDayStamp(new Date());
+  calendarCursor = getMonthCursor(selectedDate);
   persistState();
-  renderDayTabs();
-  renderThread();
-  renderStats();
-  renderReflection();
-  renderDailyNudge();
-  renderHelperText();
+  renderAll();
 });
 
 installButton.addEventListener("click", async () => {
@@ -113,21 +123,61 @@ installButton.addEventListener("click", async () => {
 });
 
 themeToggle.addEventListener("change", () => {
-  const nextTheme = themeToggle.checked ? "dark" : "light";
-  applyTheme(nextTheme);
-  localStorage.setItem(THEME_KEY, nextTheme);
+  setTheme(themeToggle.checked ? "dark" : "light");
+});
+
+themeToggleSettings.addEventListener("change", () => {
+  setTheme(themeToggleSettings.checked ? "dark" : "light");
 });
 
 useNudgeButton.addEventListener("click", () => {
   prayerInput.value = getDailyNudge();
+  scrollToSection("journalSection");
   prayerInput.focus();
 });
 
+startJournalButton.addEventListener("click", () => {
+  scrollToSection("journalSection");
+  prayerInput.focus();
+});
+
+openSelectedDayButton.addEventListener("click", () => {
+  state.activeDay = selectedDate;
+  persistState();
+  renderJournal();
+  scrollToSection("journalSection");
+});
+
+prevMonthButton.addEventListener("click", () => {
+  calendarCursor.setMonth(calendarCursor.getMonth() - 1);
+  renderCalendar();
+});
+
+nextMonthButton.addEventListener("click", () => {
+  calendarCursor.setMonth(calendarCursor.getMonth() + 1);
+  renderCalendar();
+});
+
+navButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    scrollToSection(button.dataset.target);
+  });
+});
+
+function renderAll(justSent = false) {
+  renderPromptChips();
+  renderDayTabs();
+  renderJournal(justSent);
+  renderStats();
+  renderDailyNudge();
+  renderTodayLabel();
+  renderCalendar();
+}
+
 function createInitialState() {
-  const today = formatDayStamp(new Date());
   return {
     days: {},
-    activeDay: today
+    activeDay: formatDayStamp(new Date())
   };
 }
 
@@ -152,7 +202,7 @@ function migrateState(saved) {
 
   if (saved && typeof saved === "object" && saved.days && typeof saved.days === "object") {
     nextState.days = normalizeDays(saved.days);
-    nextState.activeDay = nextState.days[saved.activeDay] ? saved.activeDay : chooseDefaultDay(nextState.days);
+    nextState.activeDay = nextState.days[saved.activeDay] ? saved.activeDay : nextState.activeDay;
     return nextState;
   }
 
@@ -172,8 +222,6 @@ function migrateState(saved) {
         createdAt: message.createdAt
       });
     });
-
-    nextState.activeDay = chooseDefaultDay(nextState.days);
   }
 
   return nextState;
@@ -189,6 +237,10 @@ function normalizeDays(days) {
 
     normalized[day] = messages
       .filter((message) => message && message.text && message.createdAt)
+      .map((message) => ({
+        text: message.text,
+        createdAt: message.createdAt
+      }))
       .sort((left, right) => new Date(left.createdAt) - new Date(right.createdAt));
   });
 
@@ -205,13 +257,12 @@ function ensureDay(day) {
   }
 }
 
-function chooseDefaultDay(days) {
-  const sorted = getSortedDays(days);
-  return sorted[0] || formatDayStamp(new Date());
-}
-
 function getSortedDays(days = state.days) {
   return Object.keys(days).sort((left, right) => new Date(right) - new Date(left));
+}
+
+function getJournalDays() {
+  return Array.from(new Set([formatDayStamp(new Date()), state.activeDay, ...getSortedDays()]));
 }
 
 function getActiveMessages() {
@@ -228,6 +279,7 @@ function renderPromptChips() {
     button.textContent = prompt;
     button.addEventListener("click", () => {
       prayerInput.value = prompt;
+      scrollToSection("journalSection");
       prayerInput.focus();
     });
     promptChips.appendChild(button);
@@ -235,16 +287,9 @@ function renderPromptChips() {
 }
 
 function renderDayTabs() {
-  const days = getSortedDays();
   dayTabs.innerHTML = "";
 
-  if (!days.length) {
-    const button = createDayTab(formatDayStamp(new Date()), true);
-    dayTabs.appendChild(button);
-    return;
-  }
-
-  days.forEach((day) => {
+  getJournalDays().forEach((day) => {
     dayTabs.appendChild(createDayTab(day, day === state.activeDay));
   });
 }
@@ -259,13 +304,22 @@ function createDayTab(day, isActive) {
   `;
   button.addEventListener("click", () => {
     state.activeDay = day;
+    selectedDate = day;
+    calendarCursor = getMonthCursor(day);
     persistState();
     renderDayTabs();
-    renderThread();
-    renderReflection();
-    renderHelperText();
+    renderJournal();
+    renderCalendar();
   });
   return button;
+}
+
+function renderJournal(justSent = false) {
+  journalTitle.textContent = formatDayTitle(state.activeDay);
+  composerDateLabel.textContent = state.activeDay === formatDayStamp(new Date()) ? "Today" : formatLongDay(state.activeDay);
+  renderThread();
+  renderReflection(justSent);
+  renderHelperText();
 }
 
 function renderThread() {
@@ -276,8 +330,10 @@ function renderThread() {
     const empty = document.createElement("div");
     empty.className = "empty-state";
     empty.innerHTML = `
-      <p>No prayers saved for ${formatDayTitle(state.activeDay)}.</p>
-      <p>Write something now and it will be added to today's journal tab.</p>
+      <div>
+        <p>No prayers saved for ${formatDayTitle(state.activeDay)}.</p>
+        <p>The page starts blank each day so you can write what is actually on your mind.</p>
+      </div>
     `;
     thread.appendChild(empty);
     return;
@@ -309,12 +365,97 @@ function renderDailyNudge() {
   nudgeText.textContent = getDailyNudge();
 }
 
+function renderTodayLabel() {
+  todayDateLabel.textContent = new Intl.DateTimeFormat(undefined, {
+    weekday: "long",
+    month: "long",
+    day: "numeric"
+  }).format(new Date());
+}
+
 function renderHelperText() {
-  const today = formatDayStamp(new Date());
+  const currentDay = formatDayStamp(new Date());
   helperText.textContent =
-    state.activeDay === today
-      ? "Saved only on this device."
+    state.activeDay === currentDay
+      ? "Today writes to a fresh page."
       : `Viewing ${formatLongDay(state.activeDay)}. New prayers save to today.`;
+}
+
+function renderCalendar() {
+  const year = calendarCursor.getFullYear();
+  const month = calendarCursor.getMonth();
+  const firstDay = new Date(year, month, 1);
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+  calendarMonthLabel.textContent = new Intl.DateTimeFormat(undefined, {
+    month: "long",
+    year: "numeric"
+  }).format(firstDay);
+
+  calendarGrid.innerHTML = "";
+
+  for (let index = 0; index < firstDay.getDay(); index += 1) {
+    const spacer = document.createElement("div");
+    spacer.className = "calendar-empty";
+    calendarGrid.appendChild(spacer);
+  }
+
+  for (let dayNumber = 1; dayNumber <= daysInMonth; dayNumber += 1) {
+    const date = new Date(year, month, dayNumber);
+    const stamp = formatDayStamp(date);
+    const messages = state.days[stamp] || [];
+    const button = document.createElement("button");
+    button.className = [
+      "calendar-day",
+      messages.length ? "has-entry" : "",
+      stamp === formatDayStamp(new Date()) ? "is-today" : "",
+      stamp === selectedDate ? "is-selected" : ""
+    ]
+      .filter(Boolean)
+      .join(" ");
+    button.type = "button";
+    button.setAttribute("aria-label", `${formatLongDay(stamp)}, ${formatDaySubtitle(stamp)}`);
+    button.innerHTML = `
+      <span class="calendar-day-number">${dayNumber}</span>
+      ${messages.length ? `<span class="calendar-entry-count">${messages.length}</span>` : ""}
+    `;
+    button.addEventListener("click", () => {
+      selectedDate = stamp;
+      state.activeDay = stamp;
+      persistState();
+      renderDayTabs();
+      renderJournal();
+      renderCalendar();
+    });
+    calendarGrid.appendChild(button);
+  }
+
+  renderSelectedDayEntries();
+}
+
+function renderSelectedDayEntries() {
+  selectedDateLabel.textContent = formatDayTitle(selectedDate);
+  selectedDayEntries.innerHTML = "";
+  const messages = state.days[selectedDate] || [];
+
+  if (!messages.length) {
+    const empty = document.createElement("div");
+    empty.className = "entry-preview";
+    empty.innerHTML = `<p>No entry for ${formatDayTitle(selectedDate)} yet.</p>`;
+    selectedDayEntries.appendChild(empty);
+    return;
+  }
+
+  messages.forEach((message) => {
+    const preview = document.createElement("article");
+    preview.className = "entry-preview";
+    const text = document.createElement("p");
+    const time = document.createElement("time");
+    text.textContent = truncateText(message.text, 110);
+    time.textContent = formatTimestamp(message.createdAt);
+    preview.append(text, time);
+    selectedDayEntries.appendChild(preview);
+  });
 }
 
 function getTotalPrayerCount() {
@@ -322,14 +463,14 @@ function getTotalPrayerCount() {
 }
 
 function getDailyNudge() {
-  const today = formatDayStamp(new Date());
-  const todaysCount = (state.days[today] || []).length;
+  const currentDay = formatDayStamp(new Date());
+  const todaysCount = (state.days[currentDay] || []).length;
 
   if (todaysCount > 0) {
     return "You already checked in today. Add one more honest sentence before you leave.";
   }
 
-  const dayNumber = Number(today.replaceAll("-", ""));
+  const dayNumber = Number(currentDay.replaceAll("-", ""));
   return nudges[dayNumber % nudges.length];
 }
 
@@ -339,11 +480,11 @@ function calculateStreak() {
     return 0;
   }
 
-  const today = formatDayStamp(new Date());
-  const yesterday = shiftDay(today, -1);
+  const currentDay = formatDayStamp(new Date());
+  const yesterday = shiftDay(currentDay, -1);
   const mostRecent = days[days.length - 1];
 
-  if (mostRecent !== today && mostRecent !== yesterday) {
+  if (mostRecent !== currentDay && mostRecent !== yesterday) {
     return 0;
   }
 
@@ -366,20 +507,18 @@ function configureInstallExperience() {
     window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
 
   if (isStandalone) {
-    installCopy.textContent = "Installed. You can launch Prayer Thread like any other app.";
+    installCopy.textContent = "Installed. Launch Prayer Thread from your home screen.";
     installButton.classList.add("is-hidden");
     return;
   }
 
   if (isIos) {
-    installCopy.textContent =
-      "On iPhone: open in Safari, tap Share, then choose Add to Home Screen.";
+    installCopy.textContent = "Open in Safari, tap Share, then Add to Home Screen.";
     installButton.classList.add("is-hidden");
     return;
   }
 
-  installCopy.textContent =
-    "On Mac: open this in Chrome or Edge and use Install app when it appears.";
+  installCopy.textContent = "Open this in Chrome or Edge and use Install app when it appears.";
 }
 
 function loadTheme() {
@@ -391,12 +530,54 @@ function loadTheme() {
   return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
 }
 
+function setTheme(theme) {
+  applyTheme(theme);
+  localStorage.setItem(THEME_KEY, theme);
+}
+
 function applyTheme(theme) {
   document.documentElement.setAttribute("data-theme", theme);
   themeToggle.checked = theme === "dark";
+  themeToggleSettings.checked = theme === "dark";
   document
     .querySelector('meta[name="theme-color"]')
-    .setAttribute("content", theme === "dark" ? "#18202c" : "#c96f4a");
+    .setAttribute("content", theme === "dark" ? "#11161b" : "#b9613d");
+}
+
+function setupSectionObserver() {
+  const observer = new IntersectionObserver(
+    (entries) => {
+      const activeEntry = entries
+        .filter((entry) => entry.isIntersecting)
+        .sort((left, right) => right.intersectionRatio - left.intersectionRatio)[0];
+
+      if (!activeEntry) {
+        return;
+      }
+
+      setActiveNav(activeEntry.target.id);
+    },
+    {
+      root: appShell,
+      threshold: [0.55, 0.75]
+    }
+  );
+
+  sections.forEach((section) => observer.observe(section));
+}
+
+function setActiveNav(sectionId) {
+  navButtons.forEach((button) => {
+    button.classList.toggle("is-active", button.dataset.target === sectionId);
+  });
+}
+
+function scrollToSection(sectionId) {
+  document.querySelector(`#${sectionId}`).scrollIntoView({
+    behavior: "smooth",
+    block: "start"
+  });
+  setActiveNav(sectionId);
 }
 
 function registerServiceWorker() {
@@ -420,10 +601,10 @@ function formatTimestamp(value) {
 }
 
 function formatDayTitle(day) {
-  const today = formatDayStamp(new Date());
-  const yesterday = shiftDay(today, -1);
+  const currentDay = formatDayStamp(new Date());
+  const yesterday = shiftDay(currentDay, -1);
 
-  if (day === today) {
+  if (day === currentDay) {
     return "Today";
   }
 
@@ -439,7 +620,7 @@ function formatDayTitle(day) {
 
 function formatDaySubtitle(day) {
   const messages = state.days[day] || [];
-  return `${messages.length} ${messages.length === 1 ? "prayer" : "prayers"}`;
+  return `${messages.length} ${messages.length === 1 ? "entry" : "entries"}`;
 }
 
 function formatLongDay(day) {
@@ -456,16 +637,28 @@ function formatDayStamp(date) {
   ).padStart(2, "0")}`;
 }
 
+function getMonthCursor(day) {
+  const date = new Date(`${day}T12:00:00`);
+  return new Date(date.getFullYear(), date.getMonth(), 1);
+}
+
 function shiftDay(day, amount) {
   const date = new Date(`${day}T12:00:00`);
   date.setDate(date.getDate() + amount);
   return formatDayStamp(date);
 }
 
+function truncateText(value, maxLength) {
+  if (value.length <= maxLength) {
+    return value;
+  }
+
+  return `${value.slice(0, maxLength - 3)}...`;
+}
+
 window.addEventListener("beforeinstallprompt", (event) => {
   event.preventDefault();
   deferredInstallPrompt = event;
-  installCopy.textContent =
-    "This browser supports install. Use the button below to add Prayer Thread as an app.";
+  installCopy.textContent = "This browser supports install. Use the button to add Prayer Thread.";
   installButton.classList.remove("is-hidden");
 });

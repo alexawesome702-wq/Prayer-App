@@ -2,11 +2,11 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>Prayer Thread</title>
     <meta
       name="description"
-      content="A texting-style prayer app that helps people pray more often."
+      content="A mobile prayer journal that helps people pray more often."
     />
     <meta name="theme-color" content="#c96f4a" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -18,64 +18,38 @@
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
-    <main class="app-shell">
-      <section class="phone-panel">
-        <div class="phone-frame">
-          <header class="chat-header">
-            <div>
-              <p class="chat-label">Prayer journal</p>
-              <h2>God</h2>
-            </div>
-            <div class="chat-actions">
-              <label class="theme-toggle" for="themeToggle">
-                <input id="themeToggle" type="checkbox" />
-                <span class="toggle-track">
-                  <span class="toggle-thumb"></span>
-                </span>
-                <span class="toggle-label">Dark</span>
-              </label>
-              <button class="ghost-button" id="clearButton" type="button">
-                Reset
-              </button>
-            </div>
-          </header>
+    <main class="app-shell" id="appShell">
+      <section class="snap-section inspiration-section" id="inspirationSection" data-section="inspiration">
+        <header class="app-header">
+          <div>
+            <p class="eyebrow" id="todayDateLabel">Prayer Thread</p>
+            <h1>Today</h1>
+          </div>
+          <label class="theme-toggle" for="themeToggle">
+            <input id="themeToggle" type="checkbox" />
+            <span class="toggle-track">
+              <span class="toggle-thumb"></span>
+            </span>
+            <span class="toggle-label">Dark</span>
+          </label>
+        </header>
 
-          <section class="day-tabs" id="dayTabs" aria-label="Prayer days"></section>
+        <section class="inspiration-card">
+          <p class="card-label">Today's inspiration</p>
+          <p class="inspiration-text" id="nudgeText">
+            God, help me tell the truth about what I am carrying today.
+          </p>
+          <div class="action-row">
+            <button class="primary-button" id="startJournalButton" type="button">
+              Start writing
+            </button>
+            <button class="ghost-button" id="useNudgeButton" type="button">
+              Use prompt
+            </button>
+          </div>
+        </section>
 
-          <section class="thread" id="thread" aria-live="polite"></section>
-
-          <section class="reflection-card" id="reflectionCard">
-            <p class="reflection-label">Reflection</p>
-            <p id="reflectionText">
-              Start with honesty. Prayer does not need polished words.
-            </p>
-          </section>
-
-          <form class="composer" id="composer">
-            <label class="sr-only" for="prayerInput">Type your prayer</label>
-            <textarea
-              id="prayerInput"
-              rows="2"
-              maxlength="400"
-              placeholder="Type your prayer here..."
-            ></textarea>
-            <div class="composer-footer">
-              <p id="helperText">Saved only on this device.</p>
-              <button class="send-button" type="submit">Send prayer</button>
-            </div>
-          </form>
-        </div>
-      </section>
-
-      <section class="hero-panel">
-        <p class="eyebrow">Prayer, but in a familiar format</p>
-        <h1>Prayer Thread</h1>
-        <p class="hero-copy">
-          A texting-style space to send your prayers, keep track of your prayer
-          rhythm, and slow down long enough to talk to God more often.
-        </p>
-
-        <div class="stats-grid stats-grid-compact">
+        <section class="stats-grid">
           <article class="stat-card">
             <span class="stat-label">Current streak</span>
             <strong class="stat-value" id="streakValue">0 days</strong>
@@ -84,43 +58,153 @@
             <span class="stat-label">Prayers sent</span>
             <strong class="stat-value" id="totalValue">0</strong>
           </article>
-        </div>
-
-        <section class="nudge-panel">
-          <div class="panel-header">
-            <h2>Today's nudge</h2>
-            <p>One easy way to start instead of overthinking it.</p>
-          </div>
-          <p class="nudge-copy" id="nudgeText">
-            God, help me tell the truth about what I am carrying today.
-          </p>
-          <button class="ghost-button nudge-button" id="useNudgeButton" type="button">
-            Use this in my prayer
-          </button>
         </section>
 
         <section class="prompt-panel">
           <div class="panel-header">
             <h2>Quick starts</h2>
-            <p>Tap one when you do not know what to pray.</p>
+            <p>Tap one and jump into the journal.</p>
           </div>
           <div class="chip-row" id="promptChips"></div>
         </section>
+      </section>
 
-        <section class="install-panel" id="installPanel">
-          <div class="panel-header">
-            <h2>Install</h2>
-            <p>Put it on your phone or launch it from your Mac dock.</p>
+      <section class="snap-section journal-section" id="journalSection" data-section="journal">
+        <header class="section-header">
+          <div>
+            <p class="eyebrow">Journal</p>
+            <h2 id="journalTitle">Today</h2>
           </div>
-          <p class="install-copy" id="installCopy">
-            Open this site in Safari on iPhone, tap Share, then choose Add to Home Screen.
-          </p>
-          <button class="send-button install-button is-hidden" id="installButton" type="button">
-            Install app
-          </button>
+          <p class="section-meta" id="helperText">Saved only on this device.</p>
+        </header>
+
+        <section class="day-tabs" id="dayTabs" aria-label="Prayer days"></section>
+
+        <section class="thread" id="thread" aria-live="polite"></section>
+
+        <section class="reflection-card" id="reflectionCard">
+          <p class="card-label">Reflection</p>
+          <p id="reflectionText">Start with honesty. Prayer does not need polished words.</p>
+        </section>
+
+        <form class="composer" id="composer">
+          <label class="sr-only" for="prayerInput">Type your prayer</label>
+          <textarea
+            id="prayerInput"
+            rows="4"
+            maxlength="800"
+            placeholder="Write what you need to say today..."
+          ></textarea>
+          <div class="composer-footer">
+            <span id="composerDateLabel">Today</span>
+            <button class="primary-button" type="submit">Send prayer</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="snap-section calendar-section" id="calendarSection" data-section="calendar">
+        <header class="section-header">
+          <div>
+            <p class="eyebrow">Calendar</p>
+            <h2 id="calendarMonthLabel">Month</h2>
+          </div>
+          <div class="calendar-controls">
+            <button class="icon-button" id="prevMonthButton" type="button" aria-label="Previous month">
+              <span aria-hidden="true">&lt;</span>
+            </button>
+            <button class="icon-button" id="nextMonthButton" type="button" aria-label="Next month">
+              <span aria-hidden="true">&gt;</span>
+            </button>
+          </div>
+        </header>
+
+        <section class="calendar-card">
+          <div class="calendar-weekdays" aria-hidden="true">
+            <span>Sun</span>
+            <span>Mon</span>
+            <span>Tue</span>
+            <span>Wed</span>
+            <span>Thu</span>
+            <span>Fri</span>
+            <span>Sat</span>
+          </div>
+          <div class="calendar-grid" id="calendarGrid"></div>
+        </section>
+
+        <section class="selected-day-panel">
+          <div class="panel-header">
+            <h2 id="selectedDateLabel">Selected day</h2>
+            <button class="ghost-button compact-button" id="openSelectedDayButton" type="button">
+              Open
+            </button>
+          </div>
+          <div class="selected-day-entries" id="selectedDayEntries"></div>
+        </section>
+      </section>
+
+      <section class="snap-section settings-section" id="settingsSection" data-section="settings">
+        <header class="section-header">
+          <div>
+            <p class="eyebrow">Settings</p>
+            <h2>App</h2>
+          </div>
+        </header>
+
+        <section class="settings-list">
+          <article class="settings-row">
+            <div>
+              <h3>Theme</h3>
+              <p>Switch between light and dark mode.</p>
+            </div>
+            <label class="theme-toggle theme-toggle-inline" for="themeToggleSettings">
+              <input id="themeToggleSettings" type="checkbox" />
+              <span class="toggle-track">
+                <span class="toggle-thumb"></span>
+              </span>
+            </label>
+          </article>
+
+          <article class="settings-row">
+            <div>
+              <h3>Install</h3>
+              <p id="installCopy">Open this site in Safari, tap Share, then Add to Home Screen.</p>
+            </div>
+            <button class="primary-button install-button is-hidden" id="installButton" type="button">
+              Install
+            </button>
+          </article>
+
+          <article class="settings-row danger-row">
+            <div>
+              <h3>Reset journal</h3>
+              <p>Clear prayers stored on this device.</p>
+            </div>
+            <button class="ghost-button compact-button" id="clearButton" type="button">
+              Reset
+            </button>
+          </article>
         </section>
       </section>
     </main>
+
+    <nav class="bottom-nav" aria-label="App sections">
+      <button class="nav-button is-active" type="button" data-target="inspirationSection">
+        <span class="nav-dot"></span>
+        <span>Today</span>
+      </button>
+      <button class="nav-button" type="button" data-target="journalSection">
+        <span class="nav-dot"></span>
+        <span>Journal</span>
+      </button>
+      <button class="nav-button" type="button" data-target="calendarSection">
+        <span class="nav-dot"></span>
+        <span>Calendar</span>
+      </button>
+      <button class="nav-button" type="button" data-target="settingsSection">
+        <span class="nav-dot"></span>
+        <span>Settings</span>
+      </button>
+    </nav>
 
     <template id="messageTemplate">
       <article class="message message-outgoing">
