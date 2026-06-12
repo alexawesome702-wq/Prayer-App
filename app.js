@@ -24,7 +24,6 @@ const nudges = [
   "I do not have perfect words, but I am here."
 ];
 
-const appShell = document.querySelector("#appShell");
 const thread = document.querySelector("#thread");
 const composer = document.querySelector("#composer");
 const prayerInput = document.querySelector("#prayerInput");
@@ -35,6 +34,7 @@ const totalValue = document.querySelector("#totalValue");
 const reflectionText = document.querySelector("#reflectionText");
 const nudgeText = document.querySelector("#nudgeText");
 const todayDateLabel = document.querySelector("#todayDateLabel");
+const todayStatusPill = document.querySelector("#todayStatusPill");
 const journalTitle = document.querySelector("#journalTitle");
 const composerDateLabel = document.querySelector("#composerDateLabel");
 const clearButton = document.querySelector("#clearButton");
@@ -45,9 +45,8 @@ const messageTemplate = document.querySelector("#messageTemplate");
 const installButton = document.querySelector("#installButton");
 const installCopy = document.querySelector("#installCopy");
 const themeToggle = document.querySelector("#themeToggle");
-const themeToggleSettings = document.querySelector("#themeToggleSettings");
 const navButtons = document.querySelectorAll(".nav-button");
-const sections = document.querySelectorAll(".snap-section");
+const pages = document.querySelectorAll(".app-page");
 const calendarMonthLabel = document.querySelector("#calendarMonthLabel");
 const calendarGrid = document.querySelector("#calendarGrid");
 const prevMonthButton = document.querySelector("#prevMonthButton");
@@ -69,7 +68,6 @@ applyTheme(loadTheme());
 renderAll();
 configureInstallExperience();
 registerServiceWorker();
-setupSectionObserver();
 
 prayerInput.addEventListener("keydown", (event) => {
   if (event.key === "Enter" && !event.shiftKey) {
@@ -126,18 +124,14 @@ themeToggle.addEventListener("change", () => {
   setTheme(themeToggle.checked ? "dark" : "light");
 });
 
-themeToggleSettings.addEventListener("change", () => {
-  setTheme(themeToggleSettings.checked ? "dark" : "light");
-});
-
 useNudgeButton.addEventListener("click", () => {
   prayerInput.value = getDailyNudge();
-  scrollToSection("journalSection");
+  switchPage("journalPage");
   prayerInput.focus();
 });
 
 startJournalButton.addEventListener("click", () => {
-  scrollToSection("journalSection");
+  switchPage("journalPage");
   prayerInput.focus();
 });
 
@@ -145,7 +139,7 @@ openSelectedDayButton.addEventListener("click", () => {
   state.activeDay = selectedDate;
   persistState();
   renderJournal();
-  scrollToSection("journalSection");
+  switchPage("journalPage");
 });
 
 prevMonthButton.addEventListener("click", () => {
@@ -160,7 +154,7 @@ nextMonthButton.addEventListener("click", () => {
 
 navButtons.forEach((button) => {
   button.addEventListener("click", () => {
-    scrollToSection(button.dataset.target);
+    switchPage(button.dataset.target);
   });
 });
 
@@ -171,6 +165,7 @@ function renderAll(justSent = false) {
   renderStats();
   renderDailyNudge();
   renderTodayLabel();
+  renderTodayStatus();
   renderCalendar();
 }
 
@@ -279,7 +274,7 @@ function renderPromptChips() {
     button.textContent = prompt;
     button.addEventListener("click", () => {
       prayerInput.value = prompt;
-      scrollToSection("journalSection");
+      switchPage("journalPage");
       prayerInput.focus();
     });
     promptChips.appendChild(button);
@@ -371,6 +366,12 @@ function renderTodayLabel() {
     month: "long",
     day: "numeric"
   }).format(new Date());
+}
+
+function renderTodayStatus() {
+  const currentDay = formatDayStamp(new Date());
+  const todaysCount = (state.days[currentDay] || []).length;
+  todayStatusPill.textContent = todaysCount ? `${todaysCount} today` : "Blank page";
 }
 
 function renderHelperText() {
@@ -538,46 +539,23 @@ function setTheme(theme) {
 function applyTheme(theme) {
   document.documentElement.setAttribute("data-theme", theme);
   themeToggle.checked = theme === "dark";
-  themeToggleSettings.checked = theme === "dark";
   document
     .querySelector('meta[name="theme-color"]')
     .setAttribute("content", theme === "dark" ? "#11161b" : "#b9613d");
 }
 
-function setupSectionObserver() {
-  const observer = new IntersectionObserver(
-    (entries) => {
-      const activeEntry = entries
-        .filter((entry) => entry.isIntersecting)
-        .sort((left, right) => right.intersectionRatio - left.intersectionRatio)[0];
-
-      if (!activeEntry) {
-        return;
-      }
-
-      setActiveNav(activeEntry.target.id);
-    },
-    {
-      root: appShell,
-      threshold: [0.55, 0.75]
-    }
-  );
-
-  sections.forEach((section) => observer.observe(section));
-}
-
-function setActiveNav(sectionId) {
+function setActiveNav(pageId) {
   navButtons.forEach((button) => {
-    button.classList.toggle("is-active", button.dataset.target === sectionId);
+    button.classList.toggle("is-active", button.dataset.target === pageId);
   });
 }
 
-function scrollToSection(sectionId) {
-  document.querySelector(`#${sectionId}`).scrollIntoView({
-    behavior: "smooth",
-    block: "start"
+function switchPage(pageId) {
+  pages.forEach((page) => {
+    page.classList.toggle("is-active", page.id === pageId);
   });
-  setActiveNav(sectionId);
+  document.querySelector(`#${pageId}`).scrollTop = 0;
+  setActiveNav(pageId);
 }
 
 function registerServiceWorker() {

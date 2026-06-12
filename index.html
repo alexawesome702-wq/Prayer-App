@@ -8,7 +8,7 @@
       name="description"
       content="A mobile prayer journal that helps people pray more often."
     />
-    <meta name="theme-color" content="#c96f4a" />
+    <meta name="theme-color" content="#2f3538" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="Prayer Thread" />
@@ -19,91 +19,83 @@
   </head>
   <body>
     <main class="app-shell" id="appShell">
-      <section class="snap-section inspiration-section" id="inspirationSection" data-section="inspiration">
-        <header class="app-header">
+      <section class="app-page today-page is-active" id="todayPage" data-page="today">
+        <header class="top-bar">
           <div>
             <p class="eyebrow" id="todayDateLabel">Prayer Thread</p>
             <h1>Today</h1>
           </div>
-          <label class="theme-toggle" for="themeToggle">
-            <input id="themeToggle" type="checkbox" />
-            <span class="toggle-track">
-              <span class="toggle-thumb"></span>
-            </span>
-            <span class="toggle-label">Dark</span>
-          </label>
+          <span class="status-pill" id="todayStatusPill">Blank page</span>
         </header>
 
-        <section class="inspiration-card">
+        <section class="hero-card reveal-card">
           <p class="card-label">Today's inspiration</p>
           <p class="inspiration-text" id="nudgeText">
             God, help me tell the truth about what I am carrying today.
           </p>
           <div class="action-row">
-            <button class="primary-button" id="startJournalButton" type="button">
-              Start writing
-            </button>
-            <button class="ghost-button" id="useNudgeButton" type="button">
-              Use prompt
-            </button>
+            <button class="primary-button" id="startJournalButton" type="button">Write</button>
+            <button class="glass-button" id="useNudgeButton" type="button">Use this</button>
           </div>
         </section>
 
-        <section class="stats-grid">
-          <article class="stat-card">
-            <span class="stat-label">Current streak</span>
-            <strong class="stat-value" id="streakValue">0 days</strong>
+        <section class="today-footer reveal-card">
+          <article>
+            <span class="stat-label">Streak</span>
+            <strong id="streakValue">0 days</strong>
           </article>
-          <article class="stat-card">
-            <span class="stat-label">Prayers sent</span>
-            <strong class="stat-value" id="totalValue">0</strong>
+          <article>
+            <span class="stat-label">Entries</span>
+            <strong id="totalValue">0</strong>
           </article>
         </section>
+      </section>
 
-        <section class="prompt-panel">
-          <div class="panel-header">
-            <h2>Quick starts</h2>
-            <p>Tap one and jump into the journal.</p>
+      <section class="app-page journal-page" id="journalPage" data-page="journal">
+        <header class="top-bar compact-top">
+          <div>
+            <p class="eyebrow">Journal</p>
+            <h2 id="journalTitle">Today</h2>
+          </div>
+          <p class="section-meta" id="helperText">Today writes to a fresh page.</p>
+        </header>
+
+        <section class="day-tabs reveal-card" id="dayTabs" aria-label="Prayer days"></section>
+
+        <section class="journal-card reveal-card">
+          <section class="thread" id="thread" aria-live="polite"></section>
+
+          <form class="composer" id="composer">
+            <label class="sr-only" for="prayerInput">Type your prayer</label>
+            <textarea
+              id="prayerInput"
+              rows="5"
+              maxlength="800"
+              placeholder="Write what you need to say today..."
+            ></textarea>
+            <div class="composer-footer">
+              <span id="composerDateLabel">Today</span>
+              <button class="primary-button" type="submit">Send</button>
+            </div>
+          </form>
+        </section>
+
+        <section class="reflection-card reveal-card" id="reflectionCard">
+          <p class="card-label">Reflection</p>
+          <p id="reflectionText">Start with honesty. Prayer does not need polished words.</p>
+        </section>
+
+        <section class="quick-starts reveal-card">
+          <div class="section-heading">
+            <h3>Quick starts</h3>
+            <p>Pick one when the words are not there yet.</p>
           </div>
           <div class="chip-row" id="promptChips"></div>
         </section>
       </section>
 
-      <section class="snap-section journal-section" id="journalSection" data-section="journal">
-        <header class="section-header">
-          <div>
-            <p class="eyebrow">Journal</p>
-            <h2 id="journalTitle">Today</h2>
-          </div>
-          <p class="section-meta" id="helperText">Saved only on this device.</p>
-        </header>
-
-        <section class="day-tabs" id="dayTabs" aria-label="Prayer days"></section>
-
-        <section class="thread" id="thread" aria-live="polite"></section>
-
-        <section class="reflection-card" id="reflectionCard">
-          <p class="card-label">Reflection</p>
-          <p id="reflectionText">Start with honesty. Prayer does not need polished words.</p>
-        </section>
-
-        <form class="composer" id="composer">
-          <label class="sr-only" for="prayerInput">Type your prayer</label>
-          <textarea
-            id="prayerInput"
-            rows="4"
-            maxlength="800"
-            placeholder="Write what you need to say today..."
-          ></textarea>
-          <div class="composer-footer">
-            <span id="composerDateLabel">Today</span>
-            <button class="primary-button" type="submit">Send prayer</button>
-          </div>
-        </form>
-      </section>
-
-      <section class="snap-section calendar-section" id="calendarSection" data-section="calendar">
-        <header class="section-header">
+      <section class="app-page calendar-page" id="calendarPage" data-page="calendar">
+        <header class="top-bar compact-top">
           <div>
             <p class="eyebrow">Calendar</p>
             <h2 id="calendarMonthLabel">Month</h2>
@@ -118,7 +110,11 @@
           </div>
         </header>
 
-        <section class="calendar-card">
+        <section class="calendar-card reveal-card">
+          <div class="calendar-legend">
+            <span><i class="legend-dot has-entry-dot"></i>Entry day</span>
+            <span><i class="legend-dot today-dot"></i>Today</span>
+          </div>
           <div class="calendar-weekdays" aria-hidden="true">
             <span>Sun</span>
             <span>Mon</span>
@@ -131,10 +127,13 @@
           <div class="calendar-grid" id="calendarGrid"></div>
         </section>
 
-        <section class="selected-day-panel">
-          <div class="panel-header">
-            <h2 id="selectedDateLabel">Selected day</h2>
-            <button class="ghost-button compact-button" id="openSelectedDayButton" type="button">
+        <section class="selected-day-panel reveal-card">
+          <div class="section-heading inline-heading">
+            <div>
+              <p class="card-label">Selected</p>
+              <h3 id="selectedDateLabel">Selected day</h3>
+            </div>
+            <button class="glass-button compact-button" id="openSelectedDayButton" type="button">
               Open
             </button>
           </div>
@@ -142,22 +141,22 @@
         </section>
       </section>
 
-      <section class="snap-section settings-section" id="settingsSection" data-section="settings">
-        <header class="section-header">
+      <section class="app-page settings-page" id="settingsPage" data-page="settings">
+        <header class="top-bar compact-top">
           <div>
             <p class="eyebrow">Settings</p>
             <h2>App</h2>
           </div>
         </header>
 
-        <section class="settings-list">
+        <section class="settings-list reveal-card">
           <article class="settings-row">
             <div>
               <h3>Theme</h3>
               <p>Switch between light and dark mode.</p>
             </div>
-            <label class="theme-toggle theme-toggle-inline" for="themeToggleSettings">
-              <input id="themeToggleSettings" type="checkbox" />
+            <label class="theme-toggle theme-toggle-inline" for="themeToggle">
+              <input id="themeToggle" type="checkbox" />
               <span class="toggle-track">
                 <span class="toggle-thumb"></span>
               </span>
@@ -167,7 +166,7 @@
           <article class="settings-row">
             <div>
               <h3>Install</h3>
-              <p id="installCopy">Open this site in Safari, tap Share, then Add to Home Screen.</p>
+              <p id="installCopy">Open in Safari, tap Share, then Add to Home Screen.</p>
             </div>
             <button class="primary-button install-button is-hidden" id="installButton" type="button">
               Install
@@ -179,29 +178,27 @@
               <h3>Reset journal</h3>
               <p>Clear prayers stored on this device.</p>
             </div>
-            <button class="ghost-button compact-button" id="clearButton" type="button">
-              Reset
-            </button>
+            <button class="glass-button compact-button" id="clearButton" type="button">Reset</button>
           </article>
         </section>
       </section>
     </main>
 
     <nav class="bottom-nav" aria-label="App sections">
-      <button class="nav-button is-active" type="button" data-target="inspirationSection">
-        <span class="nav-dot"></span>
+      <button class="nav-button is-active" type="button" data-target="todayPage">
+        <span class="nav-icon">T</span>
         <span>Today</span>
       </button>
-      <button class="nav-button" type="button" data-target="journalSection">
-        <span class="nav-dot"></span>
+      <button class="nav-button" type="button" data-target="journalPage">
+        <span class="nav-icon">J</span>
         <span>Journal</span>
       </button>
-      <button class="nav-button" type="button" data-target="calendarSection">
-        <span class="nav-dot"></span>
+      <button class="nav-button" type="button" data-target="calendarPage">
+        <span class="nav-icon">C</span>
         <span>Calendar</span>
       </button>
-      <button class="nav-button" type="button" data-target="settingsSection">
-        <span class="nav-dot"></span>
+      <button class="nav-button" type="button" data-target="settingsPage">
+        <span class="nav-icon">S</span>
         <span>Settings</span>
       </button>
     </nav>
