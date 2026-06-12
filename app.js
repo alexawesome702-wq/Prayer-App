@@ -141,8 +141,20 @@ nextMonthButton.addEventListener("click", () => {
 });
 
 navButtons.forEach((button) => {
+  button.addEventListener("pointerdown", (event) => {
+    event.preventDefault();
+    isNavDragging = true;
+    switchToNavButton(button);
+  });
+
+  button.addEventListener("touchstart", (event) => {
+    event.preventDefault();
+    isNavDragging = true;
+    switchToNavButton(button);
+  }, { passive: false });
+
   button.addEventListener("click", () => {
-    switchPage(button.dataset.target);
+    switchToNavButton(button);
   });
 });
 
@@ -150,7 +162,10 @@ bottomNav.addEventListener("pointerdown", handleNavPointerDown);
 bottomNav.addEventListener("pointermove", handleNavPointerMove);
 bottomNav.addEventListener("pointerup", handleNavPointerUp);
 bottomNav.addEventListener("pointercancel", handleNavPointerUp);
+bottomNav.addEventListener("touchstart", handleNavTouchMove, { passive: false });
 bottomNav.addEventListener("touchmove", handleNavTouchMove, { passive: false });
+bottomNav.addEventListener("touchend", handleNavPointerUp, { passive: true });
+bottomNav.addEventListener("touchcancel", handleNavPointerUp, { passive: true });
 
 function renderAll(justSent = false) {
   renderPromptChips();
@@ -338,6 +353,10 @@ function renderThread() {
 }
 
 function renderStats() {
+  if (!streakValue || !totalValue) {
+    return;
+  }
+
   const streak = calculateStreak();
   streakValue.textContent = `${streak} ${streak === 1 ? "day" : "days"}`;
   totalValue.textContent = String(getTotalPrayerCount());
@@ -548,9 +567,10 @@ function setActiveNav(pageId) {
 }
 
 function handleNavPointerDown(event) {
+  event.preventDefault();
   isNavDragging = true;
-  bottomNav.setPointerCapture?.(event.pointerId);
-  switchToNavButtonAtPoint(event.clientX, event.clientY);
+  bottomNav.classList.add("is-dragging");
+  switchToNavButtonAtPoint(event.clientX);
 }
 
 function handleNavPointerMove(event) {
@@ -559,7 +579,7 @@ function handleNavPointerMove(event) {
   }
 
   event.preventDefault();
-  switchToNavButtonAtPoint(event.clientX, event.clientY);
+  switchToNavButtonAtPoint(event.clientX);
 }
 
 function handleNavPointerUp(event) {
@@ -568,7 +588,7 @@ function handleNavPointerUp(event) {
   }
 
   isNavDragging = false;
-  bottomNav.releasePointerCapture?.(event.pointerId);
+  bottomNav.classList.remove("is-dragging");
 }
 
 function handleNavTouchMove(event) {
@@ -578,17 +598,33 @@ function handleNavTouchMove(event) {
   }
 
   event.preventDefault();
-  switchToNavButtonAtPoint(touch.clientX, touch.clientY);
+  isNavDragging = true;
+  bottomNav.classList.add("is-dragging");
+  switchToNavButtonAtPoint(touch.clientX);
 }
 
-function switchToNavButtonAtPoint(x, y) {
-  const element = document.elementFromPoint(x, y);
-  const button = element?.closest(".nav-button");
+function switchToNavButtonAtPoint(x) {
+  const rect = bottomNav.getBoundingClientRect();
+  const progress = (x - rect.left) / rect.width;
+  const index = clamp(Math.floor(progress * navButtons.length), 0, navButtons.length - 1);
+  const button = navButtons[index];
   if (!button) {
     return;
   }
 
+  switchToNavButton(button);
+}
+
+function switchToNavButton(button) {
+  if (!button?.dataset.target) {
+    return;
+  }
+
   switchPage(button.dataset.target);
+}
+
+function clamp(value, min, max) {
+  return Math.min(Math.max(value, min), max);
 }
 
 function switchPage(pageId) {

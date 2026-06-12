@@ -826,6 +826,7 @@ textarea {
   content: "";
   position: absolute;
   inset: 0;
+  z-index: 0;
   pointer-events: none;
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.72), transparent 42%),
@@ -859,6 +860,10 @@ textarea {
   pointer-events: none;
 }
 
+.bottom-nav.is-dragging .nav-glider {
+  transition-duration: 180ms;
+}
+
 [data-theme="dark"] .nav-glider {
   background:
     linear-gradient(145deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.05)),
@@ -870,7 +875,7 @@ textarea {
 
 .nav-button {
   position: relative;
-  z-index: 1;
+  z-index: 2;
   display: grid;
   min-height: 54px;
   place-items: center;
