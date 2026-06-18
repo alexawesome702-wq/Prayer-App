@@ -792,10 +792,14 @@ p {
 .today-page .composer {
   position: relative;
   flex: 0 0 auto;
-  min-height: 96px;
+  min-height: 76px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: 12px;
   margin-top: 7px;
-  border-radius: 27px;
-  padding: 12px 13px 11px;
+  border-radius: 25px;
+  padding: 10px 12px;
 }
 
 .composer:focus-within {
@@ -818,6 +822,8 @@ textarea {
 }
 
 .today-page textarea {
+  grid-column: 1;
+  grid-row: 1;
   min-height: 2.25rem;
   max-height: 2.25rem;
   overflow-y: auto;
@@ -839,11 +845,31 @@ textarea::placeholder {
   margin-top: 5px;
 }
 
+.today-page .composer-footer {
+  display: contents;
+}
+
+.today-page #composerDateLabel {
+  grid-column: 1;
+  grid-row: 2;
+  align-self: start;
+  font-size: 0.64rem;
+}
+
 .send-pill {
   min-width: 86px;
   min-height: 50px;
   padding: 11px 22px;
   font-size: 1rem;
+}
+
+.today-page .send-pill {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  align-self: center;
+  min-width: 78px;
+  min-height: 46px;
+  padding: 10px 18px;
 }
 
 .daily-verse {
@@ -1447,7 +1473,7 @@ textarea::placeholder {
   }
 
   .today-page .composer {
-    min-height: 94px;
+    min-height: 74px;
   }
 
   .daily-verse {
