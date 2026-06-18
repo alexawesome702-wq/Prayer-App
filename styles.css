@@ -385,7 +385,6 @@ p {
 
 .hero-card,
 .chat-glass,
-.daily-verse,
 .today-footer,
 .day-tabs,
 .journal-card,
@@ -408,7 +407,6 @@ p {
 
 .hero-card::before,
 .chat-glass::before,
-.daily-verse::before,
 .day-tabs::before,
 .reflection-card::before,
 .quick-starts::before,
@@ -428,7 +426,6 @@ p {
 
 .hero-card > *,
 .chat-glass > *,
-.daily-verse > *,
 .day-tabs > *,
 .reflection-card > *,
 .quick-starts > *,
@@ -874,10 +871,9 @@ textarea::placeholder {
 
 .daily-verse {
   flex: 0 0 auto;
-  margin-top: 12px;
-  border-radius: 25px;
-  padding: 11px 16px 12px;
-  overflow: hidden;
+  margin: 15px 10px 0;
+  padding: 0 18px;
+  text-align: center;
 }
 
 .verse-label,
@@ -886,30 +882,39 @@ textarea::placeholder {
   margin: 0;
 }
 
-.verse-label,
-.verse-reference {
-  color: var(--muted-strong);
-  font-family: var(--font-ui);
-  font-weight: 900;
-  letter-spacing: 0.095em;
-  text-transform: uppercase;
-}
-
 .verse-label {
-  font-size: 0.56rem;
+  display: none;
 }
 
 .verse-text {
-  margin-top: 4px;
-  color: var(--text);
-  font-size: clamp(0.94rem, 3.55vw, 1.06rem);
-  line-height: 1.18;
+  color: var(--muted-strong);
+  font-size: clamp(0.9rem, 3.2vw, 1.02rem);
+  font-style: italic;
+  line-height: 1.24;
+  text-shadow: 0 1px 14px rgba(255, 255, 255, 0.22);
+}
+
+.verse-text::before {
+  content: "\201C";
+}
+
+.verse-text::after {
+  content: "\201D";
 }
 
 .verse-reference {
-  margin-top: 5px;
+  margin-top: 7px;
   color: var(--accent-dark);
-  font-size: 0.58rem;
+  font-family: var(--font-ui);
+  font-size: 0.56rem;
+  font-weight: 900;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+[data-theme="dark"] .verse-text {
+  color: rgba(247, 234, 216, 0.72);
+  text-shadow: 0 1px 16px rgba(0, 0, 0, 0.2);
 }
 
 [data-theme="dark"] .verse-reference {
@@ -1222,7 +1227,7 @@ textarea::placeholder {
   --active-index: 0;
   position: fixed;
   left: 50%;
-  bottom: max(4px, calc(env(safe-area-inset-bottom) - 22px));
+  bottom: max(18px, calc(env(safe-area-inset-bottom) - 4px));
   z-index: 9999;
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -1477,8 +1482,8 @@ textarea::placeholder {
   }
 
   .daily-verse {
-    margin-top: 10px;
-    padding: 10px 14px 11px;
+    margin-top: 13px;
+    padding-inline: 14px;
   }
 
   .verse-text {
