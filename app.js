@@ -341,7 +341,6 @@ function renderThread() {
           <svg class="empty-spark" viewBox="0 0 32 32" aria-hidden="true">
             <path d="M16 3.5c1.8 6.4 4.1 8.7 12.5 12.5C20.1 19.8 17.8 22.1 16 28.5 14.2 22.1 11.9 19.8 3.5 16 11.9 12.2 14.2 9.9 16 3.5Z" />
           </svg>
-          <p>Start the conversation.</p>
         </div>`
       : `<div><p>No entry for ${formatDayTitle(state.activeDay)}.</p></div>`;
     thread.appendChild(empty);

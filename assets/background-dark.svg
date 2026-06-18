@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 390 844" preserveAspectRatio="none">
+  <defs>
+    <linearGradient id="base" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#2c1d14"/>
+      <stop offset="0.34" stop-color="#111821"/>
+      <stop offset="0.68" stop-color="#0c1015"/>
+      <stop offset="1" stop-color="#182427"/>
+    </linearGradient>
+    <radialGradient id="amber" cx="6%" cy="7%" r="66%">
+      <stop offset="0" stop-color="#b97735" stop-opacity="0.7"/>
+      <stop offset="0.42" stop-color="#9a5a22" stop-opacity="0.26"/>
+      <stop offset="1" stop-color="#9a5a22" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="mist" cx="78%" cy="18%" r="56%">
+      <stop offset="0" stop-color="#ffcf91" stop-opacity="0.22"/>
+      <stop offset="0.52" stop-color="#c58a4a" stop-opacity="0.11"/>
+      <stop offset="1" stop-color="#c58a4a" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="chapel" cx="48%" cy="50%" r="68%">
+      <stop offset="0" stop-color="#26313b" stop-opacity="0.42"/>
+      <stop offset="0.62" stop-color="#111923" stop-opacity="0.16"/>
+      <stop offset="1" stop-color="#111923" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="floor" cx="66%" cy="88%" r="56%">
+      <stop offset="0" stop-color="#263a3d" stop-opacity="0.52"/>
+      <stop offset="0.66" stop-color="#0a1013" stop-opacity="0.2"/>
+      <stop offset="1" stop-color="#0a1013" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="grain">
+      <feTurbulence type="fractalNoise" baseFrequency="0.88" numOctaves="3" seed="31"/>
+      <feColorMatrix type="saturate" values="0"/>
+      <feComponentTransfer>
+        <feFuncA type="table" tableValues="0 0.085"/>
+      </feComponentTransfer>
+    </filter>
+  </defs>
+  <rect width="390" height="844" fill="url(#base)"/>
+  <rect width="390" height="844" fill="url(#amber)"/>
+  <rect width="390" height="844" fill="url(#mist)"/>
+  <rect width="390" height="844" fill="url(#chapel)"/>
+  <rect width="390" height="844" fill="url(#floor)"/>
+  <rect width="390" height="844" opacity="0.26" fill="#05080b"/>
+  <rect width="390" height="844" filter="url(#grain)"/>
+</svg>

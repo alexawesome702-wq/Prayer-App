@@ -1,10 +1,12 @@
-const CACHE_NAME = "prayer-thread-v11";
+const CACHE_NAME = "prayer-thread-v12";
 const ASSETS = [
   "./",
   "./index.html",
   "./styles.css",
   "./app.js",
   "./manifest.webmanifest",
+  "./assets/background-light.svg",
+  "./assets/background-dark.svg",
   "./icons/icon-app.svg",
   "./icons/icon-180.svg"
 ];
