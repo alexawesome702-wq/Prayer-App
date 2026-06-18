@@ -230,6 +230,10 @@ button {
   animation-delay: 130ms;
 }
 
+.today-page {
+  padding-bottom: calc(100px + env(safe-area-inset-bottom));
+}
+
 .top-bar,
 .section-heading,
 .action-row,
