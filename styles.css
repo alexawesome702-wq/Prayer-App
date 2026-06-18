@@ -385,6 +385,7 @@ p {
 
 .hero-card,
 .chat-glass,
+.daily-verse,
 .today-footer,
 .day-tabs,
 .journal-card,
@@ -407,6 +408,7 @@ p {
 
 .hero-card::before,
 .chat-glass::before,
+.daily-verse::before,
 .day-tabs::before,
 .reflection-card::before,
 .quick-starts::before,
@@ -426,6 +428,7 @@ p {
 
 .hero-card > *,
 .chat-glass > *,
+.daily-verse > *,
 .day-tabs > *,
 .reflection-card > *,
 .quick-starts > *,
@@ -453,7 +456,7 @@ p {
   display: flex;
   flex-direction: column;
   border-radius: 40px;
-  padding: 28px 16px 16px;
+  padding: 28px 16px 13px;
   overflow: hidden;
   background:
     radial-gradient(circle at 8% 11%, rgba(255, 255, 255, 0.64), transparent 11%),
@@ -699,7 +702,7 @@ p {
   flex: 1;
   min-height: 0;
   max-height: none;
-  padding: 10px 4px 18px;
+  padding: 10px 4px 12px;
 }
 
 .message {
@@ -789,10 +792,10 @@ p {
 .today-page .composer {
   position: relative;
   flex: 0 0 auto;
-  min-height: 178px;
-  margin-top: 8px;
-  border-radius: 29px;
-  padding: 15px 14px 14px;
+  min-height: 96px;
+  margin-top: 7px;
+  border-radius: 27px;
+  padding: 12px 13px 11px;
 }
 
 .composer:focus-within {
@@ -814,6 +817,14 @@ textarea {
   line-height: 1.45;
 }
 
+.today-page textarea {
+  min-height: 2.25rem;
+  max-height: 2.25rem;
+  overflow-y: auto;
+  font-size: 1.08rem;
+  line-height: 1.38;
+}
+
 textarea::placeholder {
   color: rgba(69, 44, 26, 0.52);
 }
@@ -825,14 +836,58 @@ textarea::placeholder {
 .composer-footer {
   justify-content: space-between;
   gap: 12px;
-  margin-top: 7px;
+  margin-top: 5px;
 }
 
 .send-pill {
   min-width: 86px;
-  min-height: 54px;
-  padding: 13px 22px;
-  font-size: 1.04rem;
+  min-height: 50px;
+  padding: 11px 22px;
+  font-size: 1rem;
+}
+
+.daily-verse {
+  flex: 0 0 auto;
+  margin-top: 12px;
+  border-radius: 25px;
+  padding: 11px 16px 12px;
+  overflow: hidden;
+}
+
+.verse-label,
+.verse-text,
+.verse-reference {
+  margin: 0;
+}
+
+.verse-label,
+.verse-reference {
+  color: var(--muted-strong);
+  font-family: var(--font-ui);
+  font-weight: 900;
+  letter-spacing: 0.095em;
+  text-transform: uppercase;
+}
+
+.verse-label {
+  font-size: 0.56rem;
+}
+
+.verse-text {
+  margin-top: 4px;
+  color: var(--text);
+  font-size: clamp(0.94rem, 3.55vw, 1.06rem);
+  line-height: 1.18;
+}
+
+.verse-reference {
+  margin-top: 5px;
+  color: var(--accent-dark);
+  font-size: 0.58rem;
+}
+
+[data-theme="dark"] .verse-reference {
+  color: var(--accent-bright);
 }
 
 .reflection-card,
@@ -1392,7 +1447,16 @@ textarea::placeholder {
   }
 
   .today-page .composer {
-    min-height: 166px;
+    min-height: 94px;
+  }
+
+  .daily-verse {
+    margin-top: 10px;
+    padding: 10px 14px 11px;
+  }
+
+  .verse-text {
+    font-size: 0.92rem;
   }
 
   .nav-button {

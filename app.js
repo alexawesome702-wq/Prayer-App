@@ -16,6 +16,65 @@ const reflections = [
   "If your mind is loud, write the prayer exactly as it feels."
 ];
 
+const dailyVerses = [
+  {
+    text: "Be still, and know that I am God.",
+    reference: "Psalm 46:10"
+  },
+  {
+    text: "The Lord is my shepherd; I shall not want.",
+    reference: "Psalm 23:1"
+  },
+  {
+    text: "I will fear no evil: for thou art with me.",
+    reference: "Psalm 23:4"
+  },
+  {
+    text: "The Lord is my light and my salvation; whom shall I fear?",
+    reference: "Psalm 27:1"
+  },
+  {
+    text: "Commit thy way unto the Lord; trust also in him.",
+    reference: "Psalm 37:5"
+  },
+  {
+    text: "Create in me a clean heart, O God.",
+    reference: "Psalm 51:10"
+  },
+  {
+    text: "When I am afraid, I will trust in thee.",
+    reference: "Psalm 56:3"
+  },
+  {
+    text: "Thy word is a lamp unto my feet.",
+    reference: "Psalm 119:105"
+  },
+  {
+    text: "Trust in the Lord with all thine heart.",
+    reference: "Proverbs 3:5"
+  },
+  {
+    text: "The Lord bless thee, and keep thee.",
+    reference: "Numbers 6:24"
+  },
+  {
+    text: "With God all things are possible.",
+    reference: "Matthew 19:26"
+  },
+  {
+    text: "I can do all things through Christ which strengtheneth me.",
+    reference: "Philippians 4:13"
+  },
+  {
+    text: "Pray without ceasing.",
+    reference: "1 Thessalonians 5:17"
+  },
+  {
+    text: "Cast all your care upon him; for he careth for you.",
+    reference: "1 Peter 5:7"
+  }
+];
+
 const thread = document.querySelector("#thread");
 const composer = document.querySelector("#composer");
 const prayerInput = document.querySelector("#prayerInput");
@@ -47,6 +106,8 @@ const nextMonthButton = document.querySelector("#nextMonthButton");
 const selectedDateLabel = document.querySelector("#selectedDateLabel");
 const selectedDayEntries = document.querySelector("#selectedDayEntries");
 const openSelectedDayButton = document.querySelector("#openSelectedDayButton");
+const dailyVerseText = document.querySelector("#dailyVerseText");
+const dailyVerseReference = document.querySelector("#dailyVerseReference");
 
 let deferredInstallPrompt = null;
 let state = loadState();
@@ -174,6 +235,7 @@ function renderAll(justSent = false) {
   renderJournal(justSent);
   renderStats();
   renderTodayLabel();
+  renderDailyVerse();
   renderCalendar();
 }
 
@@ -388,6 +450,17 @@ function renderTodayLabel() {
     month: "long",
     day: "numeric"
   }).format(new Date());
+}
+
+function renderDailyVerse() {
+  if (!dailyVerseText || !dailyVerseReference) {
+    return;
+  }
+
+  const dayNumber = Math.floor(new Date(`${formatDayStamp(new Date())}T12:00:00`).getTime() / 86400000);
+  const verse = dailyVerses[dayNumber % dailyVerses.length];
+  dailyVerseText.textContent = verse.text;
+  dailyVerseReference.textContent = verse.reference;
 }
 
 function renderHelperText() {
