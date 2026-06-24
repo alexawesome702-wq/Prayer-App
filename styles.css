@@ -9,6 +9,14 @@
   --accent-dark: #6f4610;
   --accent-bright: #f2c85b;
   --accent-soft: rgba(197, 142, 30, 0.18);
+  --accent-highlight: rgba(255, 228, 139, 0.32);
+  --accent-highlight-soft: rgba(255, 228, 139, 0.24);
+  --accent-shadow: rgba(92, 58, 9, 0.28);
+  --accent-inset: rgba(255, 235, 171, 0.5);
+  --accent-focus: rgba(197, 142, 30, 0.54);
+  --accent-focus-soft: rgba(197, 142, 30, 0.13);
+  --accent-panel-glow: rgba(197, 142, 30, 0.08);
+  --accent-backdrop-glow: rgba(245, 205, 91, 0.46);
   --gold: #d5a63a;
   --danger: #9f3f24;
   --surface: rgba(255, 252, 246, 0.34);
@@ -39,7 +47,7 @@
   --shadow: 0 24px 70px rgba(70, 49, 31, 0.2), 0 8px 24px rgba(255, 255, 255, 0.22) inset;
   --glass-shadow: 0 18px 48px rgba(55, 40, 28, 0.2), 0 2px 12px rgba(255, 255, 255, 0.34) inset;
   --bourbon-backdrop:
-    radial-gradient(ellipse 74% 44% at 8% 0%, rgba(245, 205, 91, 0.46), transparent 56%),
+    radial-gradient(ellipse 74% 44% at 8% 0%, var(--accent-backdrop-glow), transparent 56%),
     radial-gradient(ellipse 54% 38% at 78% 13%, rgba(255, 255, 255, 0.72), transparent 64%),
     radial-gradient(ellipse 64% 44% at 14% 58%, rgba(255, 236, 207, 0.36), transparent 68%),
     radial-gradient(ellipse 80% 58% at 92% 80%, rgba(95, 116, 122, 0.26), transparent 68%),
@@ -68,6 +76,14 @@
   --accent-dark: #8f6119;
   --accent-bright: #f3cf68;
   --accent-soft: rgba(210, 162, 60, 0.2);
+  --accent-highlight: rgba(255, 228, 139, 0.32);
+  --accent-highlight-soft: rgba(255, 228, 139, 0.16);
+  --accent-shadow: rgba(0, 0, 0, 0.34);
+  --accent-inset: rgba(255, 235, 171, 0.28);
+  --accent-focus: rgba(210, 162, 60, 0.54);
+  --accent-focus-soft: rgba(210, 162, 60, 0.16);
+  --accent-panel-glow: rgba(210, 162, 60, 0.12);
+  --accent-backdrop-glow: rgba(243, 207, 104, 0.12);
   --gold: #ddb451;
   --danger: #e47d5d;
   --surface: rgba(38, 31, 27, 0.34);
@@ -81,7 +97,7 @@
   --backdrop-overlay:
     linear-gradient(180deg, rgba(2, 5, 8, 0.14) 0%, rgba(8, 12, 15, 0.08) 46%, rgba(0, 0, 0, 0.28) 100%);
   --page-vignette:
-    radial-gradient(ellipse 94% 54% at 50% -8%, rgba(243, 207, 104, 0.12), transparent 62%),
+    radial-gradient(ellipse 94% 54% at 50% -8%, var(--accent-backdrop-glow), transparent 62%),
     radial-gradient(ellipse 92% 56% at 50% 104%, rgba(0, 0, 0, 0.44), transparent 62%);
   --glass-tint: rgba(13, 18, 22, 0.34);
   --glass-tint-strong: rgba(36, 42, 44, 0.42);
@@ -466,7 +482,7 @@ p {
   background:
     radial-gradient(circle at 8% 11%, rgba(255, 255, 255, 0.64), transparent 11%),
     radial-gradient(circle at 86% 72%, rgba(166, 185, 190, 0.18), transparent 35%),
-    radial-gradient(circle at 20% 90%, rgba(197, 142, 30, 0.08), transparent 38%),
+    radial-gradient(circle at 20% 90%, var(--accent-panel-glow), transparent 38%),
     linear-gradient(145deg, rgba(255, 255, 255, 0.38), rgba(255, 249, 240, 0.1)),
     rgba(255, 255, 255, 0.16);
   box-shadow:
@@ -494,8 +510,8 @@ p {
 [data-theme="dark"] .chat-glass {
   background:
     radial-gradient(circle at 8% 11%, rgba(255, 236, 210, 0.16), transparent 11%),
-    radial-gradient(circle at 86% 72%, rgba(210, 162, 60, 0.12), transparent 35%),
-    radial-gradient(circle at 20% 90%, rgba(210, 162, 60, 0.1), transparent 38%),
+    radial-gradient(circle at 86% 72%, var(--accent-panel-glow), transparent 35%),
+    radial-gradient(circle at 20% 90%, var(--accent-soft), transparent 38%),
     linear-gradient(145deg, rgba(42, 47, 49, 0.42), rgba(9, 13, 17, 0.24)),
     rgba(8, 13, 17, 0.34);
 }
@@ -525,7 +541,8 @@ p {
 .nav-button,
 .day-tab,
 .calendar-day,
-.chip {
+.chip,
+.accent-choice {
   border: 0;
   cursor: pointer;
 }
@@ -545,11 +562,11 @@ p {
   padding: 12px 21px;
   color: #fff8ee;
   background:
-    linear-gradient(180deg, rgba(255, 228, 139, 0.36), transparent 42%),
+    linear-gradient(180deg, var(--accent-highlight), transparent 42%),
     linear-gradient(145deg, var(--accent-bright), var(--accent) 42%, var(--accent-dark));
   box-shadow:
-    0 14px 30px rgba(91, 58, 11, 0.26),
-    inset 0 1px 0 rgba(255, 235, 171, 0.64),
+    0 14px 30px var(--accent-shadow),
+    inset 0 1px 0 var(--accent-inset),
     inset 0 -12px 22px rgba(74, 45, 8, 0.22);
   text-shadow: 0 1px 8px rgba(55, 34, 7, 0.26);
 }
@@ -654,9 +671,9 @@ p {
 .day-tab.is-active {
   color: #fff7ec;
   background:
-    linear-gradient(180deg, rgba(255, 198, 104, 0.26), transparent 48%),
+    linear-gradient(180deg, var(--accent-highlight-soft), transparent 48%),
     linear-gradient(145deg, var(--accent), var(--accent-dark));
-  box-shadow: 0 11px 24px rgba(92, 58, 9, 0.22), inset 0 1px 0 rgba(255, 235, 171, 0.5);
+  box-shadow: 0 11px 24px var(--accent-shadow), inset 0 1px 0 var(--accent-inset);
 }
 
 .day-tab-title,
@@ -719,8 +736,8 @@ p {
   color: var(--bubble-text);
   background: var(--bubble);
   box-shadow:
-    0 12px 24px rgba(84, 53, 9, 0.24),
-    inset 0 1px 0 rgba(255, 235, 171, 0.42);
+    0 12px 24px var(--accent-shadow),
+    inset 0 1px 0 var(--accent-inset);
   animation: message-in 260ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
@@ -808,9 +825,9 @@ p {
 }
 
 .composer:focus-within {
-  border-color: rgba(197, 142, 30, 0.54);
+  border-color: var(--accent-focus);
   box-shadow:
-    0 0 0 5px rgba(197, 142, 30, 0.13),
+    0 0 0 5px var(--accent-focus-soft),
     inset 0 1px 0 rgba(255, 255, 255, 0.66);
 }
 
@@ -938,7 +955,7 @@ textarea::placeholder {
 
 .reflection-card {
   background:
-    radial-gradient(circle at 0% 0%, rgba(197, 142, 30, 0.16), transparent 46%),
+    radial-gradient(circle at 0% 0%, var(--accent-soft), transparent 46%),
     linear-gradient(145deg, rgba(255, 255, 255, 0.34), rgba(255, 250, 242, 0.09)),
     var(--surface);
 }
@@ -1077,23 +1094,23 @@ textarea::placeholder {
 .calendar-day.has-entry {
   color: #fff7ec;
   background:
-    linear-gradient(180deg, rgba(255, 228, 139, 0.28), transparent),
+    linear-gradient(180deg, var(--accent-highlight-soft), transparent),
     linear-gradient(145deg, var(--accent), var(--accent-dark));
   border-color: rgba(255, 236, 198, 0.52);
-  box-shadow: 0 10px 20px rgba(92, 58, 9, 0.22), inset 0 1px 0 rgba(255, 235, 171, 0.5);
+  box-shadow: 0 10px 20px var(--accent-shadow), inset 0 1px 0 var(--accent-inset);
 }
 
 .calendar-day.is-today {
-  border-color: rgba(213, 166, 58, 0.78);
+  border-color: color-mix(in srgb, var(--gold) 78%, transparent);
   box-shadow:
-    inset 0 0 0 2px rgba(213, 166, 58, 0.78),
+    inset 0 0 0 2px color-mix(in srgb, var(--gold) 78%, transparent),
     inset 0 1px 0 rgba(255, 255, 255, 0.42);
 }
 
 .calendar-day.is-selected {
   color: #fff7ec;
   background:
-    linear-gradient(180deg, rgba(255, 198, 104, 0.28), transparent 45%),
+    linear-gradient(180deg, var(--accent-highlight-soft), transparent 45%),
     linear-gradient(145deg, var(--accent-bright), var(--accent-dark));
   transform: translateY(-1px);
 }
@@ -1172,6 +1189,82 @@ textarea::placeholder {
 .settings-row p {
   margin: 5px 0 0;
   color: var(--muted);
+}
+
+.accent-settings-row {
+  display: grid;
+  align-items: start;
+}
+
+.accent-options {
+  display: grid;
+  width: 100%;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 9px;
+}
+
+.accent-choice {
+  display: flex;
+  min-height: 54px;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid var(--glass-edge);
+  border-radius: 17px;
+  padding: 9px 10px;
+  color: var(--text);
+  background:
+    radial-gradient(circle at 12% 10%, rgba(255, 255, 255, 0.26), transparent 35%),
+    linear-gradient(145deg, var(--field-surface-strong), var(--field-surface)),
+    var(--surface-soft);
+  box-shadow: inset 0 1px 0 var(--glass-hairline);
+  font-family: var(--font-ui);
+  text-align: left;
+}
+
+.accent-choice.is-active {
+  border-color: var(--accent-focus);
+  box-shadow:
+    0 10px 22px var(--accent-shadow),
+    0 0 0 4px var(--accent-focus-soft),
+    inset 0 1px 0 var(--glass-hairline);
+}
+
+.accent-swatch {
+  flex: 0 0 auto;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 28% 22%, rgba(255, 255, 255, 0.5), transparent 34%),
+    linear-gradient(145deg, color-mix(in srgb, var(--swatch) 76%, white), var(--swatch));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.72),
+    0 8px 16px color-mix(in srgb, var(--swatch) 34%, transparent);
+}
+
+.accent-copy {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+
+.accent-copy strong,
+.accent-copy small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.accent-copy strong {
+  font-size: 0.76rem;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+}
+
+.accent-copy small {
+  color: var(--muted);
+  font-size: 0.62rem;
+  font-weight: 700;
 }
 
 .danger-row h3 {
@@ -1288,7 +1381,7 @@ textarea::placeholder {
     linear-gradient(145deg, rgba(255, 255, 255, 0.52), rgba(255, 243, 229, 0.18)),
     rgba(255, 245, 234, 0.34);
   box-shadow:
-    0 13px 30px rgba(116, 74, 39, 0.18),
+    0 13px 30px var(--accent-shadow),
     inset 0 1px 0 var(--glass-hairline),
     inset 0 -12px 22px rgba(255, 255, 255, 0.22);
   transform: translateX(calc(var(--active-index) * (100% + 5px)));
@@ -1351,18 +1444,18 @@ textarea::placeholder {
 .nav-button.is-active .nav-icon {
   color: #fff8ef;
   background:
-    linear-gradient(180deg, rgba(255, 228, 139, 0.32), transparent 46%),
+    linear-gradient(180deg, var(--accent-highlight), transparent 46%),
     linear-gradient(145deg, var(--accent), var(--accent-dark));
   box-shadow:
-    0 8px 18px rgba(92, 58, 9, 0.28),
-    inset 0 1px 0 rgba(255, 235, 171, 0.5);
+    0 8px 18px var(--accent-shadow),
+    inset 0 1px 0 var(--accent-inset);
   transform: scale(1.05);
 }
 
 [data-theme="dark"] .streak-counter,
 [data-theme="dark"] .bottom-nav {
   background:
-    radial-gradient(circle at 12% 8%, rgba(243, 207, 104, 0.16), transparent 33%),
+    radial-gradient(circle at 12% 8%, var(--accent-soft), transparent 33%),
     radial-gradient(circle at 86% 82%, rgba(7, 17, 21, 0.5), transparent 42%),
     linear-gradient(160deg, var(--glass-tint-strong), var(--glass-tint)),
     var(--field-surface);
@@ -1374,7 +1467,7 @@ textarea::placeholder {
 
 [data-theme="dark"] .bottom-nav::before {
   background:
-    radial-gradient(circle at 12% 10%, rgba(243, 207, 104, 0.2), transparent 28%),
+    radial-gradient(circle at 12% 10%, var(--accent-soft), transparent 28%),
     linear-gradient(180deg, rgba(255, 246, 232, 0.12), transparent 44%),
     linear-gradient(90deg, transparent, rgba(255, 246, 232, 0.08), transparent);
 }
@@ -1382,7 +1475,7 @@ textarea::placeholder {
 [data-theme="dark"] .nav-glider {
   background:
     radial-gradient(circle at 20% 14%, rgba(255, 237, 211, 0.18), transparent 34%),
-    linear-gradient(145deg, rgba(255, 246, 232, 0.16), rgba(255, 169, 83, 0.08)),
+    linear-gradient(145deg, rgba(255, 246, 232, 0.16), var(--accent-soft)),
     rgba(255, 245, 234, 0.08);
   box-shadow:
     0 13px 30px rgba(0, 0, 0, 0.32),

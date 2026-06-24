@@ -1,5 +1,7 @@
 const STORAGE_KEY = "prayer-thread-state";
 const THEME_KEY = "prayer-thread-theme";
+const ACCENT_KEY = "prayer-thread-accent";
+const DEFAULT_ACCENT = "refined-gold";
 
 const quickPrompts = [
   "God, thank You for staying close even when life feels noisy.",
@@ -75,6 +77,209 @@ const dailyVerses = [
   }
 ];
 
+const accentPalettes = [
+  {
+    id: "celestial-blue",
+    label: "Celestial blue",
+    hex: "#4A7FA5",
+    description: "Calm and clear",
+    light: {
+      "--accent": "#4A7FA5",
+      "--accent-dark": "#244962",
+      "--accent-bright": "#8FC1E2",
+      "--accent-soft": "rgba(74, 127, 165, 0.18)",
+      "--accent-highlight": "rgba(178, 220, 245, 0.38)",
+      "--accent-highlight-soft": "rgba(178, 220, 245, 0.24)",
+      "--accent-shadow": "rgba(28, 70, 98, 0.24)",
+      "--accent-inset": "rgba(203, 234, 250, 0.5)",
+      "--accent-focus": "rgba(74, 127, 165, 0.54)",
+      "--accent-focus-soft": "rgba(74, 127, 165, 0.13)",
+      "--accent-panel-glow": "rgba(74, 127, 165, 0.09)",
+      "--accent-backdrop-glow": "rgba(130, 188, 222, 0.38)",
+      "--gold": "#6CA1C5",
+      "--bubble": "radial-gradient(circle at 18% 12%, rgba(178, 220, 245, 0.42), transparent 32%), linear-gradient(145deg, #6EA6CB 0%, #4A7FA5 48%, #244962 100%)",
+      "--bubble-text": "#f4fbff"
+    },
+    dark: {
+      "--accent": "#6EA6CB",
+      "--accent-dark": "#315D78",
+      "--accent-bright": "#A9D5EF",
+      "--accent-soft": "rgba(110, 166, 203, 0.2)",
+      "--accent-highlight": "rgba(178, 220, 245, 0.24)",
+      "--accent-highlight-soft": "rgba(178, 220, 245, 0.16)",
+      "--accent-shadow": "rgba(0, 0, 0, 0.34)",
+      "--accent-inset": "rgba(203, 234, 250, 0.28)",
+      "--accent-focus": "rgba(110, 166, 203, 0.54)",
+      "--accent-focus-soft": "rgba(110, 166, 203, 0.16)",
+      "--accent-panel-glow": "rgba(110, 166, 203, 0.12)",
+      "--accent-backdrop-glow": "rgba(110, 166, 203, 0.12)",
+      "--gold": "#7FB4D1",
+      "--bubble": "radial-gradient(circle at 18% 12%, rgba(178, 220, 245, 0.24), transparent 32%), linear-gradient(145deg, #5F95B7 0%, #3D6F91 50%, #1D4058 100%)",
+      "--bubble-text": "#f4fbff"
+    }
+  },
+  {
+    id: "sacred-purple",
+    label: "Sacred purple",
+    hex: "#7B5EA7",
+    description: "Royal and reverent",
+    light: {
+      "--accent": "#7B5EA7",
+      "--accent-dark": "#463363",
+      "--accent-bright": "#B8A1DF",
+      "--accent-soft": "rgba(123, 94, 167, 0.18)",
+      "--accent-highlight": "rgba(217, 200, 246, 0.34)",
+      "--accent-highlight-soft": "rgba(217, 200, 246, 0.22)",
+      "--accent-shadow": "rgba(62, 44, 91, 0.24)",
+      "--accent-inset": "rgba(232, 219, 255, 0.46)",
+      "--accent-focus": "rgba(123, 94, 167, 0.54)",
+      "--accent-focus-soft": "rgba(123, 94, 167, 0.13)",
+      "--accent-panel-glow": "rgba(123, 94, 167, 0.09)",
+      "--accent-backdrop-glow": "rgba(173, 150, 214, 0.34)",
+      "--gold": "#947AC0",
+      "--bubble": "radial-gradient(circle at 18% 12%, rgba(217, 200, 246, 0.38), transparent 32%), linear-gradient(145deg, #9A7DCA 0%, #7B5EA7 48%, #463363 100%)",
+      "--bubble-text": "#fff8ff"
+    },
+    dark: {
+      "--accent": "#9A7DCA",
+      "--accent-dark": "#5E4684",
+      "--accent-bright": "#CFBDF2",
+      "--accent-soft": "rgba(154, 125, 202, 0.2)",
+      "--accent-highlight": "rgba(217, 200, 246, 0.22)",
+      "--accent-highlight-soft": "rgba(217, 200, 246, 0.15)",
+      "--accent-shadow": "rgba(0, 0, 0, 0.34)",
+      "--accent-inset": "rgba(232, 219, 255, 0.26)",
+      "--accent-focus": "rgba(154, 125, 202, 0.54)",
+      "--accent-focus-soft": "rgba(154, 125, 202, 0.16)",
+      "--accent-panel-glow": "rgba(154, 125, 202, 0.12)",
+      "--accent-backdrop-glow": "rgba(154, 125, 202, 0.12)",
+      "--gold": "#AB91D2",
+      "--bubble": "radial-gradient(circle at 18% 12%, rgba(217, 200, 246, 0.22), transparent 32%), linear-gradient(145deg, #8A6BBC 0%, #644895 50%, #35264F 100%)",
+      "--bubble-text": "#fff8ff"
+    }
+  },
+  {
+    id: "refined-gold",
+    label: "Refined gold",
+    hex: "#C49A3C",
+    description: "Richer gold",
+    light: {
+      "--accent": "#C49A3C",
+      "--accent-dark": "#704F16",
+      "--accent-bright": "#E7C56F",
+      "--accent-soft": "rgba(196, 154, 60, 0.18)",
+      "--accent-highlight": "rgba(255, 231, 156, 0.34)",
+      "--accent-highlight-soft": "rgba(255, 231, 156, 0.24)",
+      "--accent-shadow": "rgba(92, 58, 9, 0.24)",
+      "--accent-inset": "rgba(255, 235, 171, 0.5)",
+      "--accent-focus": "rgba(196, 154, 60, 0.54)",
+      "--accent-focus-soft": "rgba(196, 154, 60, 0.13)",
+      "--accent-panel-glow": "rgba(196, 154, 60, 0.08)",
+      "--accent-backdrop-glow": "rgba(245, 205, 91, 0.42)",
+      "--gold": "#D4AA4B",
+      "--bubble": "radial-gradient(circle at 18% 12%, rgba(255, 231, 156, 0.38), transparent 32%), linear-gradient(145deg, #D3A746 0%, #A97719 50%, #704F16 100%)",
+      "--bubble-text": "#fff7ec"
+    },
+    dark: {
+      "--accent": "#D4AA4B",
+      "--accent-dark": "#8E671D",
+      "--accent-bright": "#F0D27E",
+      "--accent-soft": "rgba(212, 170, 75, 0.2)",
+      "--accent-highlight": "rgba(255, 231, 156, 0.24)",
+      "--accent-highlight-soft": "rgba(255, 231, 156, 0.16)",
+      "--accent-shadow": "rgba(0, 0, 0, 0.34)",
+      "--accent-inset": "rgba(255, 235, 171, 0.28)",
+      "--accent-focus": "rgba(212, 170, 75, 0.54)",
+      "--accent-focus-soft": "rgba(212, 170, 75, 0.16)",
+      "--accent-panel-glow": "rgba(212, 170, 75, 0.12)",
+      "--accent-backdrop-glow": "rgba(212, 170, 75, 0.12)",
+      "--gold": "#DDB451",
+      "--bubble": "radial-gradient(circle at 18% 12%, rgba(255, 231, 156, 0.24), transparent 32%), linear-gradient(145deg, #C9952A 0%, #9A6612 50%, #50330B 100%)",
+      "--bubble-text": "#fff7ec"
+    }
+  },
+  {
+    id: "earthy-amber",
+    label: "Earthy amber",
+    hex: "#A0522D",
+    description: "Grounded and warm",
+    light: {
+      "--accent": "#A0522D",
+      "--accent-dark": "#63311C",
+      "--accent-bright": "#D78A5C",
+      "--accent-soft": "rgba(160, 82, 45, 0.18)",
+      "--accent-highlight": "rgba(232, 161, 113, 0.34)",
+      "--accent-highlight-soft": "rgba(232, 161, 113, 0.22)",
+      "--accent-shadow": "rgba(93, 45, 24, 0.24)",
+      "--accent-inset": "rgba(255, 202, 160, 0.42)",
+      "--accent-focus": "rgba(160, 82, 45, 0.54)",
+      "--accent-focus-soft": "rgba(160, 82, 45, 0.13)",
+      "--accent-panel-glow": "rgba(160, 82, 45, 0.09)",
+      "--accent-backdrop-glow": "rgba(213, 128, 82, 0.34)",
+      "--gold": "#B6673C",
+      "--bubble": "radial-gradient(circle at 18% 12%, rgba(232, 161, 113, 0.38), transparent 32%), linear-gradient(145deg, #C07343 0%, #A0522D 48%, #63311C 100%)",
+      "--bubble-text": "#fff7ec"
+    },
+    dark: {
+      "--accent": "#C07343",
+      "--accent-dark": "#7D3E24",
+      "--accent-bright": "#E6A175",
+      "--accent-soft": "rgba(192, 115, 67, 0.2)",
+      "--accent-highlight": "rgba(232, 161, 113, 0.22)",
+      "--accent-highlight-soft": "rgba(232, 161, 113, 0.15)",
+      "--accent-shadow": "rgba(0, 0, 0, 0.34)",
+      "--accent-inset": "rgba(255, 202, 160, 0.26)",
+      "--accent-focus": "rgba(192, 115, 67, 0.54)",
+      "--accent-focus-soft": "rgba(192, 115, 67, 0.16)",
+      "--accent-panel-glow": "rgba(192, 115, 67, 0.12)",
+      "--accent-backdrop-glow": "rgba(192, 115, 67, 0.12)",
+      "--gold": "#C77B50",
+      "--bubble": "radial-gradient(circle at 18% 12%, rgba(232, 161, 113, 0.22), transparent 32%), linear-gradient(145deg, #B56738 0%, #85401F 50%, #492313 100%)",
+      "--bubble-text": "#fff7ec"
+    }
+  },
+  {
+    id: "rose-dawn",
+    label: "Rose dawn",
+    hex: "#C2785A",
+    description: "Soft terracotta",
+    light: {
+      "--accent": "#C2785A",
+      "--accent-dark": "#764331",
+      "--accent-bright": "#E2AA92",
+      "--accent-soft": "rgba(194, 120, 90, 0.18)",
+      "--accent-highlight": "rgba(246, 190, 168, 0.32)",
+      "--accent-highlight-soft": "rgba(246, 190, 168, 0.21)",
+      "--accent-shadow": "rgba(104, 56, 39, 0.22)",
+      "--accent-inset": "rgba(255, 218, 202, 0.4)",
+      "--accent-focus": "rgba(194, 120, 90, 0.54)",
+      "--accent-focus-soft": "rgba(194, 120, 90, 0.13)",
+      "--accent-panel-glow": "rgba(194, 120, 90, 0.09)",
+      "--accent-backdrop-glow": "rgba(220, 150, 122, 0.32)",
+      "--gold": "#CF8B70",
+      "--bubble": "radial-gradient(circle at 18% 12%, rgba(246, 190, 168, 0.34), transparent 32%), linear-gradient(145deg, #D89272 0%, #B86546 50%, #764331 100%)",
+      "--bubble-text": "#fff7ec"
+    },
+    dark: {
+      "--accent": "#D89272",
+      "--accent-dark": "#8D5039",
+      "--accent-bright": "#F0BFA9",
+      "--accent-soft": "rgba(216, 146, 114, 0.2)",
+      "--accent-highlight": "rgba(246, 190, 168, 0.22)",
+      "--accent-highlight-soft": "rgba(246, 190, 168, 0.15)",
+      "--accent-shadow": "rgba(0, 0, 0, 0.34)",
+      "--accent-inset": "rgba(255, 218, 202, 0.25)",
+      "--accent-focus": "rgba(216, 146, 114, 0.54)",
+      "--accent-focus-soft": "rgba(216, 146, 114, 0.16)",
+      "--accent-panel-glow": "rgba(216, 146, 114, 0.12)",
+      "--accent-backdrop-glow": "rgba(216, 146, 114, 0.12)",
+      "--gold": "#E09D7E",
+      "--bubble": "radial-gradient(circle at 18% 12%, rgba(246, 190, 168, 0.22), transparent 32%), linear-gradient(145deg, #C77F60 0%, #975239 50%, #522C20 100%)",
+      "--bubble-text": "#fff7ec"
+    }
+  }
+];
+
 const thread = document.querySelector("#thread");
 const composer = document.querySelector("#composer");
 const prayerInput = document.querySelector("#prayerInput");
@@ -96,6 +301,7 @@ const messageTemplate = document.querySelector("#messageTemplate");
 const installButton = document.querySelector("#installButton");
 const installCopy = document.querySelector("#installCopy");
 const themeToggle = document.querySelector("#themeToggle");
+const accentOptions = document.querySelector("#accentOptions");
 const bottomNav = document.querySelector("#bottomNav");
 const navButtons = document.querySelectorAll(".nav-button");
 const pages = document.querySelectorAll(".app-page");
@@ -230,6 +436,7 @@ bottomNav.addEventListener("touchend", handleNavPointerUp, { passive: true });
 bottomNav.addEventListener("touchcancel", handleNavPointerUp, { passive: true });
 
 function renderAll(justSent = false) {
+  renderAccentOptions();
   renderPromptChips();
   renderDayTabs();
   renderJournal(justSent);
@@ -623,6 +830,38 @@ function configureInstallExperience() {
   installCopy.textContent = "Open this in Chrome or Edge and use Install app when it appears.";
 }
 
+function renderAccentOptions() {
+  if (!accentOptions) {
+    return;
+  }
+
+  const activeAccent = loadAccent();
+  accentOptions.innerHTML = "";
+
+  accentPalettes.forEach((palette) => {
+    const button = document.createElement("button");
+    const isActive = palette.id === activeAccent;
+    button.className = `accent-choice${isActive ? " is-active" : ""}`;
+    button.type = "button";
+    button.role = "radio";
+    button.dataset.accent = palette.id;
+    button.setAttribute("aria-checked", String(isActive));
+    button.setAttribute("aria-label", `${palette.label}, ${palette.description}`);
+    button.style.setProperty("--swatch", palette.hex);
+    button.innerHTML = `
+      <span class="accent-swatch" aria-hidden="true"></span>
+      <span class="accent-copy">
+        <strong>${palette.label}</strong>
+        <small>${palette.description}</small>
+      </span>
+    `;
+    button.addEventListener("click", () => {
+      setAccent(palette.id);
+    });
+    accentOptions.appendChild(button);
+  });
+}
+
 function loadTheme() {
   const savedTheme = localStorage.getItem(THEME_KEY);
   if (savedTheme === "dark" || savedTheme === "light") {
@@ -643,6 +882,42 @@ function applyTheme(theme) {
   document
     .querySelector('meta[name="theme-color"]')
     .setAttribute("content", theme === "dark" ? "#24170e" : "#f6e2c9");
+  applyAccent(loadAccent());
+}
+
+function loadAccent() {
+  const savedAccent = localStorage.getItem(ACCENT_KEY);
+  return getAccentPalette(savedAccent).id;
+}
+
+function setAccent(accentId) {
+  const palette = getAccentPalette(accentId);
+  localStorage.setItem(ACCENT_KEY, palette.id);
+  applyAccent(palette.id);
+}
+
+function applyAccent(accentId) {
+  const palette = getAccentPalette(accentId);
+  const theme = document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light";
+  const variables = palette[theme];
+
+  Object.entries(variables).forEach(([property, value]) => {
+    document.documentElement.style.setProperty(property, value);
+  });
+
+  document.documentElement.setAttribute("data-accent", palette.id);
+
+  if (accentOptions?.children.length) {
+    Array.from(accentOptions.children).forEach((button) => {
+      const isActive = button.dataset.accent === palette.id;
+      button.classList.toggle("is-active", Boolean(isActive));
+      button.setAttribute("aria-checked", String(Boolean(isActive)));
+    });
+  }
+}
+
+function getAccentPalette(accentId) {
+  return accentPalettes.find((palette) => palette.id === accentId) || accentPalettes.find((palette) => palette.id === DEFAULT_ACCENT);
 }
 
 function setActiveNav(pageId) {
