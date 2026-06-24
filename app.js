@@ -32,7 +32,7 @@ const recoveryPrayerPrompts = {
 
 const recoveryStatusCopy = {
   clean: "Clean day",
-  urge: "Urge fought",
+  urge: "Urge won",
   slip: "Slip recorded"
 };
 
@@ -1110,21 +1110,27 @@ function renderCalendar() {
     const stamp = formatDayStamp(date);
     const recoveryEntry = recoveryState.days[stamp];
     const recoveryStatus = recoveryEntry?.status || "";
+    const messages = state.days[stamp] || [];
     const button = document.createElement("button");
     button.className = [
       "calendar-day",
       recoveryStatus ? `recovery-${recoveryStatus}` : "",
+      messages.length ? "has-prayer" : "",
       stamp === formatDayStamp(new Date()) ? "is-today" : "",
       stamp === selectedDate ? "is-selected" : ""
     ]
       .filter(Boolean)
       .join(" ");
     const labelStatus = recoveryStatus ? recoveryStatusCopy[recoveryStatus] : "No recovery check-in";
+    const prayerStatus = `${messages.length} ${messages.length === 1 ? "prayer" : "prayers"}`;
     button.type = "button";
-    button.setAttribute("aria-label", `${formatLongDay(stamp)}, ${labelStatus}`);
+    button.setAttribute("aria-label", `${formatLongDay(stamp)}, ${labelStatus}, ${prayerStatus}`);
     button.innerHTML = `
       <span class="calendar-day-number">${dayNumber}</span>
-      ${recoveryEntry?.urgeCount ? `<span class="calendar-entry-count">${recoveryEntry.urgeCount}</span>` : ""}
+      <span class="calendar-day-markers" aria-hidden="true">
+        ${recoveryStatus ? `<i class="calendar-status-dot ${recoveryStatus}"></i>` : ""}
+        ${messages.length ? `<span class="calendar-prayer-count">${messages.length}</span>` : ""}
+      </span>
     `;
     button.addEventListener("click", () => {
       selectedDate = stamp;
@@ -1613,6 +1619,11 @@ function switchPage(pageId) {
 function openInitialPageFromHash() {
   if (window.location.hash === "#recovery") {
     switchPage("recoveryPage");
+    return;
+  }
+
+  if (window.location.hash === "#calendar") {
+    switchPage("calendarPage");
   }
 }
 
