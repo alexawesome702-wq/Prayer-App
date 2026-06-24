@@ -94,8 +94,98 @@
         </section>
       </section>
 
-      <section class="app-page calendar-page" id="calendarPage" data-page="calendar">
+      <section class="app-page recovery-page" id="recoveryPage" data-page="recovery">
         <header class="top-bar compact-top">
+          <div>
+            <p class="eyebrow">Recovery</p>
+            <h2>Freedom</h2>
+          </div>
+          <p class="status-pill recovery-status-pill" id="recoveryTodayStatus">Not checked in</p>
+        </header>
+
+        <section class="recovery-hero reveal-card">
+          <div>
+            <p class="card-label">Porn-free streak</p>
+            <strong id="recoveryStreakValue">0</strong>
+            <span id="recoveryStreakLabel">days</span>
+          </div>
+          <div class="recovery-stats">
+            <article>
+              <span id="bestRecoveryStreak">0</span>
+              <small>Best</small>
+            </article>
+            <article>
+              <span id="cleanMonthCount">0</span>
+              <small>This month</small>
+            </article>
+            <article>
+              <span id="urgesResistedCount">0</span>
+              <small>Urges won</small>
+            </article>
+          </div>
+        </section>
+
+        <section class="checkin-panel reveal-card">
+          <div class="section-heading">
+            <div>
+              <h3>Today's check-in</h3>
+              <p>Be honest. A slip is a reset, not the end.</p>
+            </div>
+          </div>
+          <div class="recovery-action-grid">
+            <button class="primary-button recovery-action" type="button" data-recovery-status="clean">
+              I stayed clean today
+            </button>
+            <button class="glass-button recovery-action" type="button" data-recovery-status="urge">
+              I had urges but fought them
+            </button>
+            <button class="glass-button recovery-action danger-action" type="button" data-recovery-status="slip">
+              I slipped
+            </button>
+          </div>
+        </section>
+
+        <section class="sos-panel reveal-card">
+          <div class="section-heading inline-heading">
+            <div>
+              <p class="card-label">Emergency</p>
+              <h3>When temptation hits</h3>
+            </div>
+            <button class="primary-button compact-button" id="sosButton" type="button">I'm tempted</button>
+          </div>
+          <div class="sos-flow is-hidden" id="sosFlow">
+            <div class="sos-timer" id="sosTimer">60</div>
+            <p>God, help me choose freedom right now. I do not have to obey this urge.</p>
+            <div class="sos-actions">
+              <button class="glass-button compact-button sos-step" type="button">Leave the room</button>
+              <button class="glass-button compact-button sos-step" type="button">Put phone away</button>
+              <button class="glass-button compact-button" id="sosPrayerButton" type="button">Write a prayer</button>
+            </div>
+            <button class="primary-button" id="sosCompleteButton" type="button">I made it through</button>
+          </div>
+        </section>
+
+        <section class="recovery-journal-panel reveal-card">
+          <div class="section-heading">
+            <div>
+              <h3>Recovery journal</h3>
+              <p>Track triggers, victories, and what needs to change.</p>
+            </div>
+          </div>
+          <textarea
+            id="recoveryNoteInput"
+            rows="3"
+            maxlength="500"
+            placeholder="What happened? What helped? What boundary needs to change?"
+          ></textarea>
+          <div class="recovery-note-actions">
+            <button class="glass-button compact-button" type="button" data-note-type="trigger">Trigger</button>
+            <button class="glass-button compact-button" type="button" data-note-type="victory">Victory</button>
+            <button class="glass-button compact-button" type="button" data-note-type="recovery">Recovery plan</button>
+          </div>
+        </section>
+
+        <header class="top-bar compact-top recovery-calendar-top">
           <div>
             <p class="eyebrow">Calendar</p>
             <h2 id="calendarMonthLabel">Month</h2>
@@ -112,7 +202,9 @@
 
         <section class="calendar-card reveal-card">
           <div class="calendar-legend">
-            <span><i class="legend-dot has-entry-dot"></i>Entry day</span>
+            <span><i class="legend-dot clean-dot"></i>Clean</span>
+            <span><i class="legend-dot urge-dot"></i>Urge won</span>
+            <span><i class="legend-dot slip-dot"></i>Slip</span>
             <span><i class="legend-dot today-dot"></i>Today</span>
           </div>
           <div class="calendar-weekdays" aria-hidden="true">
@@ -181,6 +273,36 @@
             </button>
           </article>
 
+          <article class="settings-row reminder-settings-row">
+            <div>
+              <h3>Bedtime check-in</h3>
+              <p id="reminderStatus">Reminders are off. Default check-in time is 10:00 PM.</p>
+            </div>
+            <div class="reminder-controls">
+              <label class="theme-toggle theme-toggle-inline" for="reminderToggle">
+                <input id="reminderToggle" type="checkbox" />
+                <span class="toggle-track">
+                  <span class="toggle-thumb"></span>
+                </span>
+              </label>
+              <label class="time-field" for="reminderTimeInput">
+                <span>Time</span>
+                <input id="reminderTimeInput" type="time" value="22:00" />
+              </label>
+              <button class="glass-button compact-button" id="requestReminderButton" type="button">
+                Allow
+              </button>
+            </div>
+          </article>
+
+          <article class="settings-row danger-row">
+            <div>
+              <h3>Reset recovery</h3>
+              <p>Clear recovery streaks, check-ins, urges, slips, and notes.</p>
+            </div>
+            <button class="glass-button compact-button" id="clearRecoveryButton" type="button">Reset</button>
+          </article>
+
           <article class="settings-row danger-row">
             <div>
               <h3>Reset journal</h3>
@@ -211,14 +333,14 @@
         </span>
         <span>Journal</span>
       </button>
-      <button class="nav-button" type="button" data-target="calendarPage" aria-label="Calendar">
+      <button class="nav-button" type="button" data-target="recoveryPage" aria-label="Recovery">
         <span class="nav-icon" aria-hidden="true">
           <svg viewBox="0 0 24 24">
-            <path d="M7 4v3M17 4v3M5 8h14M6.5 6h11A1.5 1.5 0 0 1 19 7.5v10A1.5 1.5 0 0 1 17.5 19h-11A1.5 1.5 0 0 1 5 17.5v-10A1.5 1.5 0 0 1 6.5 6Z" />
-            <path d="M8 11h2M12 11h2M16 11h1M8 14h2M12 14h2M16 14h1" />
+            <path d="M12 3.8 18.5 6v5.5c0 4.2-2.6 7.4-6.5 8.7-3.9-1.3-6.5-4.5-6.5-8.7V6L12 3.8Z" />
+            <path d="m9 12 2 2 4-5" />
           </svg>
         </span>
-        <span>Calendar</span>
+        <span>Recovery</span>
       </button>
       <button class="nav-button" type="button" data-target="settingsPage" aria-label="Settings">
         <span class="nav-icon" aria-hidden="true">

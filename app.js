@@ -1,7 +1,13 @@
 const STORAGE_KEY = "prayer-thread-state";
+const RECOVERY_KEY = "prayer-thread-recovery";
 const THEME_KEY = "prayer-thread-theme";
 const ACCENT_KEY = "prayer-thread-accent";
 const DEFAULT_ACCENT = "refined-gold";
+const DEFAULT_REMINDER_TIME = "22:00";
+const PUSH_CONFIG = {
+  endpoint: window.PRAYER_PUSH_ENDPOINT || "",
+  publicKey: window.PRAYER_VAPID_PUBLIC_KEY || ""
+};
 
 const quickPrompts = [
   "God, thank You for staying close even when life feels noisy.",
@@ -17,6 +23,24 @@ const reflections = [
   "Thank God for one specific thing from today before asking for anything else.",
   "If your mind is loud, write the prayer exactly as it feels."
 ];
+
+const recoveryPrayerPrompts = {
+  clean: "God, thank You for helping me stay clean today. Keep building discipline and a clean heart in me.",
+  urge: "God, I am tempted right now. Help me slow down, leave the situation, and choose freedom over lust.",
+  slip: "God, I slipped. I am coming back instead of hiding. Show me what triggered it and help me reset with honesty."
+};
+
+const recoveryStatusCopy = {
+  clean: "Clean day",
+  urge: "Urge fought",
+  slip: "Slip recorded"
+};
+
+const noteTypeCopy = {
+  trigger: "Trigger",
+  victory: "Victory",
+  recovery: "Recovery plan"
+};
 
 const dailyVerses = [
   {
@@ -314,13 +338,37 @@ const selectedDayEntries = document.querySelector("#selectedDayEntries");
 const openSelectedDayButton = document.querySelector("#openSelectedDayButton");
 const dailyVerseText = document.querySelector("#dailyVerseText");
 const dailyVerseReference = document.querySelector("#dailyVerseReference");
+const recoveryTodayStatus = document.querySelector("#recoveryTodayStatus");
+const recoveryStreakValue = document.querySelector("#recoveryStreakValue");
+const recoveryStreakLabel = document.querySelector("#recoveryStreakLabel");
+const bestRecoveryStreak = document.querySelector("#bestRecoveryStreak");
+const cleanMonthCount = document.querySelector("#cleanMonthCount");
+const urgesResistedCount = document.querySelector("#urgesResistedCount");
+const recoveryActions = document.querySelectorAll("[data-recovery-status]");
+const recoveryNoteInput = document.querySelector("#recoveryNoteInput");
+const recoveryNoteButtons = document.querySelectorAll("[data-note-type]");
+const sosButton = document.querySelector("#sosButton");
+const sosFlow = document.querySelector("#sosFlow");
+const sosTimer = document.querySelector("#sosTimer");
+const sosPrayerButton = document.querySelector("#sosPrayerButton");
+const sosCompleteButton = document.querySelector("#sosCompleteButton");
+const sosSteps = document.querySelectorAll(".sos-step");
+const reminderToggle = document.querySelector("#reminderToggle");
+const reminderTimeInput = document.querySelector("#reminderTimeInput");
+const reminderStatus = document.querySelector("#reminderStatus");
+const requestReminderButton = document.querySelector("#requestReminderButton");
+const clearRecoveryButton = document.querySelector("#clearRecoveryButton");
 
 let deferredInstallPrompt = null;
 let state = loadState();
+let recoveryState = loadRecoveryState();
 const today = formatDayStamp(new Date());
 state.activeDay = today;
 let isNavDragging = false;
 let activeNavTarget = "todayPage";
+let sosInterval = null;
+let sosRemaining = 60;
+let reminderInterval = null;
 
 let selectedDate = today;
 let calendarCursor = new Date(`${today}T12:00:00`);
@@ -330,6 +378,8 @@ applyTheme(loadTheme());
 renderAll();
 configureInstallExperience();
 registerServiceWorker();
+setupReminderFallback();
+openInitialPageFromHash();
 
 prayerInput.addEventListener("keydown", (event) => {
   if (event.key === "Enter" && !event.shiftKey) {
@@ -371,6 +421,15 @@ clearButton.addEventListener("click", () => {
   renderAll();
 });
 
+clearRecoveryButton.addEventListener("click", () => {
+  recoveryState = createInitialRecoveryState();
+  selectedDate = formatDayStamp(new Date());
+  calendarCursor = getMonthCursor(selectedDate);
+  persistRecoveryState();
+  renderAll();
+  setupReminderFallback();
+});
+
 installButton.addEventListener("click", async () => {
   if (!deferredInstallPrompt) {
     return;
@@ -384,6 +443,59 @@ installButton.addEventListener("click", async () => {
 
 themeToggle.addEventListener("change", () => {
   setTheme(themeToggle.checked ? "dark" : "light");
+});
+
+reminderToggle.addEventListener("change", () => {
+  recoveryState.reminder.enabled = reminderToggle.checked;
+  recoveryState.reminder.time = reminderTimeInput.value || DEFAULT_REMINDER_TIME;
+  recoveryState.reminder.timezone = getLocalTimezone();
+  persistRecoveryState();
+  renderReminderSettings();
+  setupReminderFallback();
+});
+
+reminderTimeInput.addEventListener("change", () => {
+  recoveryState.reminder.time = reminderTimeInput.value || DEFAULT_REMINDER_TIME;
+  recoveryState.reminder.timezone = getLocalTimezone();
+  persistRecoveryState();
+  renderReminderSettings();
+  setupReminderFallback();
+});
+
+requestReminderButton.addEventListener("click", () => {
+  requestReminderPermission();
+});
+
+recoveryActions.forEach((button) => {
+  button.addEventListener("click", () => {
+    recordRecoveryStatus(button.dataset.recoveryStatus);
+  });
+});
+
+recoveryNoteButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    addRecoveryNote(button.dataset.noteType);
+  });
+});
+
+sosButton.addEventListener("click", () => {
+  startSosFlow();
+});
+
+sosPrayerButton.addEventListener("click", () => {
+  prayerInput.value = recoveryPrayerPrompts.urge;
+  switchPage("todayPage");
+  prayerInput.focus();
+});
+
+sosCompleteButton.addEventListener("click", () => {
+  completeSosFlow();
+});
+
+sosSteps.forEach((button) => {
+  button.addEventListener("click", () => {
+    button.classList.toggle("is-active");
+  });
 });
 
 openSelectedDayButton.addEventListener("click", () => {
@@ -441,9 +553,11 @@ function renderAll(justSent = false) {
   renderDayTabs();
   renderJournal(justSent);
   renderStats();
+  renderRecovery();
   renderTodayLabel();
   renderDailyVerse();
   renderCalendar();
+  renderReminderSettings();
 }
 
 function createInitialState() {
@@ -523,9 +637,118 @@ function persistState() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 }
 
+function createInitialRecoveryState() {
+  return {
+    days: {},
+    sosSessions: [],
+    reminder: {
+      enabled: false,
+      time: DEFAULT_REMINDER_TIME,
+      timezone: getLocalTimezone(),
+      lastNotifiedDay: ""
+    }
+  };
+}
+
+function loadRecoveryState() {
+  const fallback = createInitialRecoveryState();
+
+  try {
+    const saved = localStorage.getItem(RECOVERY_KEY);
+    if (!saved) {
+      return fallback;
+    }
+
+    return migrateRecoveryState(JSON.parse(saved));
+  } catch {
+    return fallback;
+  }
+}
+
+function migrateRecoveryState(saved) {
+  const nextState = createInitialRecoveryState();
+
+  if (!saved || typeof saved !== "object") {
+    return nextState;
+  }
+
+  if (saved.days && typeof saved.days === "object") {
+    Object.entries(saved.days).forEach(([day, entry]) => {
+      const normalized = normalizeRecoveryDay(entry);
+      if (normalized) {
+        nextState.days[day] = normalized;
+      }
+    });
+  }
+
+  if (Array.isArray(saved.sosSessions)) {
+    nextState.sosSessions = saved.sosSessions
+      .filter((session) => session && session.createdAt)
+      .map((session) => ({
+        createdAt: session.createdAt,
+        completed: Boolean(session.completed),
+        outcome: session.outcome === "resisted" ? "resisted" : "left_open"
+      }));
+  }
+
+  if (saved.reminder && typeof saved.reminder === "object") {
+    nextState.reminder = {
+      enabled: Boolean(saved.reminder.enabled),
+      time: typeof saved.reminder.time === "string" ? saved.reminder.time : DEFAULT_REMINDER_TIME,
+      timezone: typeof saved.reminder.timezone === "string" ? saved.reminder.timezone : getLocalTimezone(),
+      lastNotifiedDay: typeof saved.reminder.lastNotifiedDay === "string" ? saved.reminder.lastNotifiedDay : ""
+    };
+  }
+
+  return nextState;
+}
+
+function normalizeRecoveryDay(entry) {
+  if (!entry || typeof entry !== "object") {
+    return null;
+  }
+
+  const status = ["clean", "urge", "slip"].includes(entry.status) ? entry.status : "";
+  const notes = Array.isArray(entry.notes)
+    ? entry.notes
+        .filter((note) => note && note.text && note.createdAt)
+        .map((note) => ({
+          type: noteTypeCopy[note.type] ? note.type : "recovery",
+          text: String(note.text),
+          createdAt: note.createdAt
+        }))
+    : [];
+
+  if (!status && !notes.length) {
+    return null;
+  }
+
+  return {
+    status,
+    urgeCount: Math.max(Number(entry.urgeCount) || 0, status === "urge" ? 1 : 0),
+    notes,
+    checkedInAt: entry.checkedInAt || ""
+  };
+}
+
+function persistRecoveryState() {
+  localStorage.setItem(RECOVERY_KEY, JSON.stringify(recoveryState));
+}
+
 function ensureDay(day) {
   if (!state.days[day]) {
     state.days[day] = [];
+  }
+}
+
+function ensureRecoveryDay(day) {
+  if (!recoveryState.days[day]) {
+    recoveryState.days[day] = {
+      status: "",
+      urgeCount: 0,
+      notes: [],
+      checkedInAt: ""
+    };
   }
 }
 
@@ -645,6 +868,191 @@ function renderStats() {
   }
 }
 
+function renderRecovery() {
+  renderRecoveryStats();
+  renderRecoveryActions();
+  renderRecoveryNoteInput();
+}
+
+function renderRecoveryStats() {
+  const stats = getRecoveryStats();
+  const todayEntry = recoveryState.days[formatDayStamp(new Date())];
+  const status = todayEntry?.status || "";
+
+  recoveryTodayStatus.textContent = status ? recoveryStatusCopy[status] : "Not checked in";
+  recoveryTodayStatus.dataset.status = status || "none";
+  recoveryStreakValue.textContent = String(stats.currentStreak);
+  recoveryStreakLabel.textContent = stats.currentStreak === 1 ? "day" : "days";
+  bestRecoveryStreak.textContent = String(stats.bestStreak);
+  cleanMonthCount.textContent = String(stats.cleanMonthCount);
+  urgesResistedCount.textContent = String(stats.urgesResisted);
+}
+
+function renderRecoveryActions() {
+  const todayEntry = recoveryState.days[formatDayStamp(new Date())];
+  const status = todayEntry?.status || "";
+
+  recoveryActions.forEach((button) => {
+    const isActive = button.dataset.recoveryStatus === status;
+    button.classList.toggle("is-active", isActive);
+    button.setAttribute("aria-pressed", String(isActive));
+  });
+}
+
+function renderRecoveryNoteInput() {
+  if (!recoveryNoteInput) {
+    return;
+  }
+
+  const selectedEntry = recoveryState.days[selectedDate];
+  const status = selectedEntry?.status;
+  if (status === "slip" && !recoveryNoteInput.value) {
+    recoveryNoteInput.placeholder = "What triggered the slip? What boundary changes before tonight?";
+    return;
+  }
+
+  recoveryNoteInput.placeholder = "What happened? What helped? What boundary needs to change?";
+}
+
+function recordRecoveryStatus(status) {
+  if (!recoveryStatusCopy[status]) {
+    return;
+  }
+
+  const currentDay = formatDayStamp(new Date());
+  ensureRecoveryDay(currentDay);
+  const entry = recoveryState.days[currentDay];
+  entry.status = status;
+  entry.checkedInAt = new Date().toISOString();
+
+  if (status === "urge") {
+    entry.urgeCount = Math.max(entry.urgeCount || 0, 1);
+  }
+
+  if (status === "slip") {
+    prayerInput.value = recoveryPrayerPrompts.slip;
+    recoveryNoteInput.value = "";
+    recoveryNoteInput.focus();
+  }
+
+  selectedDate = currentDay;
+  calendarCursor = getMonthCursor(currentDay);
+  persistRecoveryState();
+  renderAll();
+}
+
+function addRecoveryNote(type) {
+  const text = recoveryNoteInput.value.trim();
+  if (!text) {
+    recoveryNoteInput.focus();
+    return;
+  }
+
+  const day = selectedDate || formatDayStamp(new Date());
+  ensureRecoveryDay(day);
+  recoveryState.days[day].notes.push({
+    type: noteTypeCopy[type] ? type : "recovery",
+    text,
+    createdAt: new Date().toISOString()
+  });
+
+  recoveryNoteInput.value = "";
+  persistRecoveryState();
+  renderCalendar();
+}
+
+function startSosFlow() {
+  sosFlow.classList.remove("is-hidden");
+  sosRemaining = 60;
+  sosTimer.textContent = String(sosRemaining);
+  clearInterval(sosInterval);
+  sosInterval = setInterval(() => {
+    sosRemaining = Math.max(sosRemaining - 1, 0);
+    sosTimer.textContent = String(sosRemaining);
+    if (sosRemaining === 0) {
+      clearInterval(sosInterval);
+    }
+  }, 1000);
+}
+
+function completeSosFlow() {
+  clearInterval(sosInterval);
+  sosFlow.classList.add("is-hidden");
+  const currentDay = formatDayStamp(new Date());
+  ensureRecoveryDay(currentDay);
+  const entry = recoveryState.days[currentDay];
+  if (entry.status !== "slip") {
+    entry.status = "urge";
+    entry.checkedInAt = new Date().toISOString();
+  }
+  entry.urgeCount = (entry.urgeCount || 0) + 1;
+  recoveryState.sosSessions.push({
+    createdAt: new Date().toISOString(),
+    completed: true,
+    outcome: "resisted"
+  });
+  selectedDate = currentDay;
+  persistRecoveryState();
+  renderAll();
+}
+
+function getRecoveryStats() {
+  const days = Object.keys(recoveryState.days).sort((left, right) => new Date(left) - new Date(right));
+  const currentDay = formatDayStamp(new Date());
+  const yesterday = shiftDay(currentDay, -1);
+  const trackedWins = days.filter((day) => isRecoveryWin(recoveryState.days[day]));
+  const mostRecentWin = trackedWins[trackedWins.length - 1];
+  let currentStreak = 0;
+
+  if (mostRecentWin === currentDay || mostRecentWin === yesterday) {
+    currentStreak = 1;
+    for (let index = trackedWins.length - 1; index > 0; index -= 1) {
+      if (shiftDay(trackedWins[index], -1) === trackedWins[index - 1]) {
+        currentStreak += 1;
+      } else {
+        break;
+      }
+    }
+  }
+
+  let running = 0;
+  let bestStreak = 0;
+  days.forEach((day, index) => {
+    const previousDay = days[index - 1];
+    if (!isRecoveryWin(recoveryState.days[day])) {
+      running = 0;
+      return;
+    }
+
+    running = previousDay && shiftDay(day, -1) === previousDay ? running + 1 : 1;
+    bestStreak = Math.max(bestStreak, running);
+  });
+
+  const monthCursor = getMonthCursor(currentDay);
+  const month = monthCursor.getMonth();
+  const year = monthCursor.getFullYear();
+  const cleanMonthCount = days.filter((day) => {
+    const date = new Date(`${day}T12:00:00`);
+    return date.getMonth() === month && date.getFullYear() === year && isRecoveryWin(recoveryState.days[day]);
+  }).length;
+
+  const urgesResisted = Object.values(recoveryState.days).reduce(
+    (count, entry) => count + Math.max(Number(entry.urgeCount) || 0, 0),
+    0
+  );
+
+  return {
+    currentStreak,
+    bestStreak: Math.max(bestStreak, currentStreak),
+    cleanMonthCount,
+    urgesResisted
+  };
+}
+
+function isRecoveryWin(entry) {
+  return entry?.status === "clean" || entry?.status === "urge";
+}
+
 function renderReflection(justSent = false) {
   const currentCount = getActiveMessages().length;
   const index = justSent ? currentCount % reflections.length : 0;
@@ -700,29 +1108,28 @@ function renderCalendar() {
   for (let dayNumber = 1; dayNumber <= daysInMonth; dayNumber += 1) {
     const date = new Date(year, month, dayNumber);
     const stamp = formatDayStamp(date);
-    const messages = state.days[stamp] || [];
+    const recoveryEntry = recoveryState.days[stamp];
+    const recoveryStatus = recoveryEntry?.status || "";
     const button = document.createElement("button");
     button.className = [
       "calendar-day",
-      messages.length ? "has-entry" : "",
+      recoveryStatus ? `recovery-${recoveryStatus}` : "",
       stamp === formatDayStamp(new Date()) ? "is-today" : "",
       stamp === selectedDate ? "is-selected" : ""
     ]
       .filter(Boolean)
       .join(" ");
+    const labelStatus = recoveryStatus ? recoveryStatusCopy[recoveryStatus] : "No recovery check-in";
     button.type = "button";
-    button.setAttribute("aria-label", `${formatLongDay(stamp)}, ${formatDaySubtitle(stamp)}`);
+    button.setAttribute("aria-label", `${formatLongDay(stamp)}, ${labelStatus}`);
     button.innerHTML = `
       <span class="calendar-day-number">${dayNumber}</span>
-      ${messages.length ? `<span class="calendar-entry-count">${messages.length}</span>` : ""}
+      ${recoveryEntry?.urgeCount ? `<span class="calendar-entry-count">${recoveryEntry.urgeCount}</span>` : ""}
     `;
     button.addEventListener("click", () => {
       selectedDate = stamp;
-      state.activeDay = stamp;
-      persistState();
-      renderDayTabs();
-      renderJournal();
       renderCalendar();
+      renderRecoveryNoteInput();
     });
     calendarGrid.appendChild(button);
   }
@@ -757,14 +1164,37 @@ function renderArchiveEntries() {
 function renderSelectedDayEntries() {
   selectedDateLabel.textContent = formatDayTitle(selectedDate);
   selectedDayEntries.innerHTML = "";
+  const recoveryEntry = recoveryState.days[selectedDate];
   const messages = state.days[selectedDate] || [];
 
-  if (!messages.length) {
+  if (!recoveryEntry && !messages.length) {
     const empty = document.createElement("div");
     empty.className = "entry-preview";
-    empty.innerHTML = `<p>No entry for ${formatDayTitle(selectedDate)} yet.</p>`;
+    empty.innerHTML = `<p>No recovery check-in or prayer entry for ${formatDayTitle(selectedDate)} yet.</p>`;
     selectedDayEntries.appendChild(empty);
     return;
+  }
+
+  if (recoveryEntry) {
+    const summary = document.createElement("article");
+    summary.className = `entry-preview recovery-preview recovery-${recoveryEntry.status || "none"}`;
+    const status = recoveryEntry.status ? recoveryStatusCopy[recoveryEntry.status] : "Notes only";
+    summary.innerHTML = `
+      <p><strong>${status}</strong>${recoveryEntry.urgeCount ? ` · ${recoveryEntry.urgeCount} urge${recoveryEntry.urgeCount === 1 ? "" : "s"} resisted` : ""}</p>
+      ${recoveryEntry.checkedInAt ? `<time>${formatTimestamp(recoveryEntry.checkedInAt)}</time>` : ""}
+    `;
+    selectedDayEntries.appendChild(summary);
+
+    recoveryEntry.notes.forEach((note) => {
+      const preview = document.createElement("article");
+      preview.className = "entry-preview";
+      const text = document.createElement("p");
+      const time = document.createElement("time");
+      text.textContent = `${noteTypeCopy[note.type]}: ${truncateText(note.text, 120)}`;
+      time.textContent = formatTimestamp(note.createdAt);
+      preview.append(text, time);
+      selectedDayEntries.appendChild(preview);
+    });
   }
 
   messages.forEach((message) => {
@@ -772,7 +1202,7 @@ function renderSelectedDayEntries() {
     preview.className = "entry-preview";
     const text = document.createElement("p");
     const time = document.createElement("time");
-    text.textContent = truncateText(message.text, 110);
+    text.textContent = `Prayer: ${truncateText(message.text, 105)}`;
     time.textContent = formatTimestamp(message.createdAt);
     preview.append(text, time);
     selectedDayEntries.appendChild(preview);
@@ -828,6 +1258,184 @@ function configureInstallExperience() {
   }
 
   installCopy.textContent = "Open this in Chrome or Edge and use Install app when it appears.";
+}
+
+function renderReminderSettings() {
+  if (!reminderToggle || !reminderTimeInput || !reminderStatus) {
+    return;
+  }
+
+  reminderToggle.checked = Boolean(recoveryState.reminder.enabled);
+  reminderTimeInput.value = recoveryState.reminder.time || DEFAULT_REMINDER_TIME;
+  reminderStatus.textContent = getReminderStatusText();
+}
+
+function getReminderStatusText() {
+  if (!recoveryState.reminder.enabled) {
+    return `Reminders are off. Default check-in time is ${formatReminderTime(
+      recoveryState.reminder.time || DEFAULT_REMINDER_TIME
+    )}.`;
+  }
+
+  if (!("Notification" in window)) {
+    return "This browser does not support notifications. The reminder can only appear while the app is open.";
+  }
+
+  if (Notification.permission === "denied") {
+    return "Notifications are blocked. Turn them back on in browser settings to receive check-in reminders.";
+  }
+
+  if (Notification.permission !== "granted") {
+    return `Reminder set for ${formatReminderTime(recoveryState.reminder.time)}. Tap Allow to enable notifications.`;
+  }
+
+  if (!PUSH_CONFIG.endpoint || !PUSH_CONFIG.publicKey) {
+    return `Reminder set for ${formatReminderTime(
+      recoveryState.reminder.time
+    )}. App-side notifications are allowed; reliable closed-app push needs backend config.`;
+  }
+
+  return `Reliable bedtime push is enabled for ${formatReminderTime(recoveryState.reminder.time)}.`;
+}
+
+async function requestReminderPermission() {
+  recoveryState.reminder.enabled = true;
+  recoveryState.reminder.time = reminderTimeInput.value || DEFAULT_REMINDER_TIME;
+  recoveryState.reminder.timezone = getLocalTimezone();
+
+  if (!("Notification" in window)) {
+    persistRecoveryState();
+    renderReminderSettings();
+    setupReminderFallback();
+    return;
+  }
+
+  const permission = await Notification.requestPermission();
+  if (permission === "granted") {
+    await registerPushSubscription();
+  }
+
+  persistRecoveryState();
+  renderReminderSettings();
+  setupReminderFallback();
+}
+
+async function registerPushSubscription() {
+  if (!PUSH_CONFIG.endpoint || !PUSH_CONFIG.publicKey || !("serviceWorker" in navigator) || !("PushManager" in window)) {
+    return;
+  }
+
+  try {
+    const registration = await navigator.serviceWorker.ready;
+    const subscription =
+      (await registration.pushManager.getSubscription()) ||
+      (await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(PUSH_CONFIG.publicKey)
+      }));
+
+    await fetch(PUSH_CONFIG.endpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        subscription,
+        reminderTime: recoveryState.reminder.time,
+        timezone: recoveryState.reminder.timezone
+      })
+    });
+  } catch {
+    reminderStatus.textContent =
+      "Notification permission is allowed, but push registration failed. The app will still remind you while open.";
+  }
+}
+
+function setupReminderFallback() {
+  clearInterval(reminderInterval);
+  if (!recoveryState.reminder.enabled) {
+    return;
+  }
+
+  maybeSendInAppReminder();
+  reminderInterval = setInterval(maybeSendInAppReminder, 60000);
+}
+
+async function maybeSendInAppReminder() {
+  if (!recoveryState.reminder.enabled) {
+    return;
+  }
+
+  const currentDay = formatDayStamp(new Date());
+  if (recoveryState.reminder.lastNotifiedDay === currentDay || recoveryState.days[currentDay]?.status) {
+    return;
+  }
+
+  if (!isPastReminderTime(recoveryState.reminder.time || DEFAULT_REMINDER_TIME)) {
+    return;
+  }
+
+  recoveryState.reminder.lastNotifiedDay = currentDay;
+  persistRecoveryState();
+
+  if (!("Notification" in window) || Notification.permission !== "granted") {
+    renderReminderSettings();
+    return;
+  }
+
+  const title = "Time to check in";
+  const options = {
+    body: "Be honest, reset if needed, and finish the day with God.",
+    tag: "bedtime-check-in",
+    data: {
+      url: "./index.html#recovery"
+    }
+  };
+
+  try {
+    if ("serviceWorker" in navigator) {
+      const registration = await navigator.serviceWorker.ready;
+      await registration.showNotification(title, options);
+      return;
+    }
+
+    const notification = new Notification(title, options);
+    notification.onclick = () => {
+      window.focus();
+      switchPage("recoveryPage");
+    };
+  } catch {
+    renderReminderSettings();
+  }
+}
+
+function isPastReminderTime(time) {
+  const [hours, minutes] = time.split(":").map(Number);
+  const now = new Date();
+  const reminder = new Date();
+  reminder.setHours(Number.isFinite(hours) ? hours : 22, Number.isFinite(minutes) ? minutes : 0, 0, 0);
+  return now >= reminder;
+}
+
+function formatReminderTime(time) {
+  const [hours, minutes] = time.split(":").map(Number);
+  const date = new Date();
+  date.setHours(Number.isFinite(hours) ? hours : 22, Number.isFinite(minutes) ? minutes : 0, 0, 0);
+  return new Intl.DateTimeFormat(undefined, {
+    hour: "numeric",
+    minute: "2-digit"
+  }).format(date);
+}
+
+function getLocalTimezone() {
+  return Intl.DateTimeFormat().resolvedOptions().timeZone || "local";
+}
+
+function urlBase64ToUint8Array(value) {
+  const padding = "=".repeat((4 - (value.length % 4)) % 4);
+  const base64 = `${value}${padding}`.replace(/-/g, "+").replace(/_/g, "/");
+  const rawData = window.atob(base64);
+  return Uint8Array.from([...rawData].map((character) => character.charCodeAt(0)));
 }
 
 function renderAccentOptions() {
@@ -1000,6 +1608,12 @@ function switchPage(pageId) {
   });
   document.querySelector(`#${pageId}`).scrollTop = 0;
   setActiveNav(pageId);
+}
+
+function openInitialPageFromHash() {
+  if (window.location.hash === "#recovery") {
+    switchPage("recoveryPage");
+  }
 }
 
 function registerServiceWorker() {

@@ -1,4 +1,4 @@
-const CACHE_NAME = "prayer-thread-v18";
+const CACHE_NAME = "prayer-thread-v19";
 const ASSETS = [
   "./",
   "./index.html",
@@ -52,5 +52,51 @@ self.addEventListener("fetch", (event) => {
           return caches.match("./index.html");
         })
       )
+  );
+});
+
+self.addEventListener("push", (event) => {
+  let payload = {
+    title: "Time to check in",
+    body: "Be honest, reset if needed, and finish the day with God.",
+    url: "./index.html#recovery"
+  };
+
+  if (event.data) {
+    try {
+      payload = {
+        ...payload,
+        ...event.data.json()
+      };
+    } catch {
+      payload.body = event.data.text() || payload.body;
+    }
+  }
+
+  event.waitUntil(
+    self.registration.showNotification(payload.title, {
+      body: payload.body,
+      tag: "bedtime-check-in",
+      data: {
+        url: payload.url || "./index.html#recovery"
+      }
+    })
+  );
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const targetUrl = new URL(event.notification.data?.url || "./index.html#recovery", self.location.href).href;
+
+  event.waitUntil(
+    clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientList) => {
+      const existingClient = clientList.find((client) => client.url.startsWith(self.location.origin));
+      if (existingClient) {
+        existingClient.navigate(targetUrl);
+        return existingClient.focus();
+      }
+
+      return clients.openWindow(targetUrl);
+    })
   );
 });
